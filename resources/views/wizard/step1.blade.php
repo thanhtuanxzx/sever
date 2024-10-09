@@ -52,7 +52,7 @@
                     </div>
                 @else
                     <div class="nav-link">
-                        <a href="{{ url('/login') }}">Đăng nhập</a>
+                        <a href="/login">Đăng nhập</a>
                     </div>
                 @endauth
             </li>

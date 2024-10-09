@@ -141,38 +141,7 @@
 
 
 
-                            <div class="pkpListPanel_Item">
-                                <a href="">
-                                    <div class="pkpPanel_Item_Detail">
-                                        <span class="pkpPanel_Item_Detail_span"><strong>8386</strong></h6></span>
-                                        <div class="pkpPanel_Item_Detail_nameheading">
-                                            <span><p>Thành Tuấn</p></span>
-                                            <span><p>NGhiên cứu súc vật và chó</p></span>
-                                        </div>
-                                    </div>
-                                </a>
-                                <div class="pkpListPanelItem_status">
-                                    <div class="pkpListPanel_Item_Bage">
-                                        Chưa hoàn thành
-                                    </div>
-                                    <span style="margin-top: 10px; margin: 25px;"><i class="fa-solid fa-comment"></i><span> 2</span></span>
-                                </div>
-                                
-                                
-                                <button class="pkpListPanelItem__expander" onclick="toggleDetails(this)">
-                                    <span aria-hidden="true" class="fa fa-angle-down toggleIcon"></span>
-                                </button>
-                                
-                                <div class="details hidden">
-                                    <!-- Thêm nội dung chi tiết ở đây -->
-                                    <div class="pkpListPanelItem_haslabel">
-                                        <span ><i class="fa-solid fa-comment"></i><span> 2</span></span>
-                                        <label for="text"><span> || </span>Hoạt động cuối cùng được ghi lại vào 08/10/2024</label>
-                                     </div>
-                                    <button class="pkpListPanelItem_button">Xem chi tiết</button>
-                                </div>
-                                
-                            </div>
+                            
                         </div>
                     </div>
                     
@@ -195,36 +164,55 @@
                     <div class="pkpListPanel__content">
                         <div class="pkpListPanel__empty"> Không tìm thấy bài báo nào. </div>
                         <div class="pkpListPanelItem_summary">
+
+                        @foreach ($baiVietList as $baiViet)
+                        <!-- @dump($wizardProgress)  -->
+
+                        @if ($wizardProgress->contains(fn($progress) => $progress->current_step == 5 && $progress->bai_viet_id == $baiViet->id_bai_viet))
                             <div class="pkpListPanel_Item">
                                 <a href="">
                                     <div class="pkpPanel_Item_Detail">
-                                        <span class="pkpPanel_Item_Detail_span"><strong>ID-bài</strong></h6></span>
+                                        <span class="pkpPanel_Item_Detail_span">
+                                            <strong>{{ $baiViet->id_bai_viet }}</strong>
+                                        </span>
                                         <div class="pkpPanel_Item_Detail_nameheading">
-                                            <span><p>Tên tác giả</p></span>
-                                            <span><p>Tiêu đề</p></span>
+                                            <span>
+                                                <p>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</p>
+                                            </span>
+                                            <span>
+                                                <p>{{ $baiViet->tieu_de }}</p>
+                                            </span>
                                         </div>
                                     </div>
                                 </a>
                                 <div class="pkpListPanelItem_status">
                                     <div class="pkpListPanel_Item_Bage">
-                                        Trạng thái
+                                        {{ $baiViet->trang_thai }}
                                     </div>
-                                    <span style="margin-top: 10px; margin: 25px;"><i class="fa-solid fa-comment"></i><span> 2</span></span>
+                                    <span style="margin-top: 10px; margin: 25px;">
+                                        <i class="fa-solid fa-comment"></i><span> 2</span>
+                                    </span>
                                 </div>
+
                                 <button class="pkpListPanelItem__expander" onclick="toggleDetails(this)">
                                     <span aria-hidden="true" class="fa fa-angle-down toggleIcon"></span>
                                 </button>
-                                
+
                                 <div class="details hidden">
-                                    <!-- Thêm nội dung chi tiết ở đây -->
                                     <div class="pkpListPanelItem_haslabel">
                                         <span><i class="fa-solid fa-comment"></i><span> 2</span></span>
-                                        <label for="text"><span> || </span>Hoạt động cuối cùng được ghi lại vào ngày tháng năm</label>
-                                     </div>
+                                        <label for="text">
+                                            <span> || </span>Hoạt động cuối cùng được ghi lại vào {{ \Carbon\Carbon::parse($baiViet->updated_at)->format('d/m/Y') }}
+                                        </label>
+                                    </div>
                                     <button class="pkpListPanelItem_button">Xem chi tiết</button>
                                 </div>
-                                
                             </div>
+                        @endif
+                    @endforeach
+
+
+
                         </div>
                     </div>
                 </div>

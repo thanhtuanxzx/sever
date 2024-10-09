@@ -23,13 +23,14 @@ class KtraController extends Controller
            
         $wizardProgress = WizardProgress::where('user_id', Auth::id())->get();
 
-   
+      
         $baiVietIds = $wizardProgress->pluck('bai_viet_id')->unique();
 
         $baiVietList = BaiViet::whereIn('id_bai_viet', $baiVietIds)->get();
-    
 
-        return view('layout_index.Submissions',compact('wizardProgress'),compact('baiVietList'));
+
+        return view('layout_index.Submissions', compact( 'wizardProgress', 'baiVietList'));
+
     }
     public function showwizardstep1()
     {

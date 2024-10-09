@@ -17,7 +17,6 @@ class WizardController extends Controller
     // Hiển thị bước 1
     public function step1()
     {
-       
         return view('wizard.step1');
     }
 
@@ -29,20 +28,18 @@ class WizardController extends Controller
             'ghichu' => 'nullable|string',
         ]);
 
-        // Tạo hoặc cập nhật BaiViet
-        $baiViet = BaiViet::updateOrCreate(
-            ['id_bai_viet' => $request->session()->get('bai_viet_id')],
-            [
-                'chu_de' => $request->input('chu_de'),
-                'ghichu' => $request->input('ghichu'),
-            ]
-        );
+        // Tạo bài viết mới
+        $baiViet = BaiViet::create([
+            'chu_de' => $request->input('chu_de'),
+            'ghichu' => $request->input('ghichu'),
+        ]);
 
-        // Cập nhật WizardProgress
-        WizardProgress::updateOrCreate(
-            ['user_id' => Auth::id()],
-            ['bai_viet_id' => $baiViet->id_bai_viet, 'current_step' => 1]
-        );
+        // Tạo tiến trình mới
+        WizardProgress::create([
+            'user_id' => Auth::id(),
+            'bai_viet_id' => $baiViet->id_bai_viet,
+            'current_step' => 1
+        ]);
 
         // Lưu bai_viet_id vào session
         $request->session()->put('bai_viet_id', $baiViet->id_bai_viet);
@@ -53,7 +50,6 @@ class WizardController extends Controller
     // Hiển thị bước 2
     public function step2()
     {
-    
         return view('wizard.step2');
     }
 
@@ -102,11 +98,9 @@ class WizardController extends Controller
         return redirect()->route('wizard.step3');
     }
 
-
     // Hiển thị bước 3
     public function step3()
     {
-        
         return view('wizard.step3');
     }
 
@@ -121,9 +115,9 @@ class WizardController extends Controller
             'citations.*.title' => 'required|string|max:255',
             'citations.*.link' => 'required|url',
             'coAuthors' => 'nullable|array',
-            'coAuthors.*.name' => 'required|string', // Tên đồng tác giả
-            'coAuthors.*.email' => 'required|email', // Email đồng tác giả
-            'coAuthors.*.role' => 'required|string', // Vai trò của đồng tác giả
+            'coAuthors.*.name' => 'required|string',
+            'coAuthors.*.email' => 'required|email',
+            'coAuthors.*.role' => 'required|string',
         ]);
 
         // Lấy tiến trình hiện tại của người dùng
@@ -146,7 +140,7 @@ class WizardController extends Controller
         foreach ($tuKhoa as $keyword) {
             $keyword = trim($keyword);
             if (!empty($keyword)) {
-                TuKhoa::updateOrCreate([
+                TuKhoa::create([
                     'id_bai_viet' => $baiViet->id_bai_viet,
                     'tu_khoa' => $keyword
                 ]);
@@ -157,37 +151,27 @@ class WizardController extends Controller
         if ($request->has('coAuthors')) {
             foreach ($request->input('coAuthors') as $coAuthor) {
                 $user = User::where('email', $coAuthor['email'])->first();
-        
+    
                 if ($user) {
-                    TacGiaBaiViet::updateOrCreate(
-                        [
-                            'id_tac_gia' => $user->id,
-                            'id_bai_viet' => $baiViet->id_bai_viet,
-                        ],
-                        [
-                            'vai_tro' => $coAuthor['role'],
-                        ]
-                    );
+                    TacGiaBaiViet::create([
+                        'id_tac_gia' => $user->id,
+                        'id_bai_viet' => $baiViet->id_bai_viet,
+                        'vai_tro' => $coAuthor['role'],
+                    ]);
                 }
             }
         }
-        
-
 
         // Xử lý trích dẫn
         if ($request->has('citations')) {
             foreach ($request->input('citations') as $citation) {
-                Citation::updateOrCreate(
-                    [
-                        'id_bai_viet' => $baiViet->id_bai_viet,
-                        'title' => $citation['title'],
-                        'link' => $citation['link'],
-                    ],
-                    [
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
+                Citation::create([
+                    'id_bai_viet' => $baiViet->id_bai_viet,
+                    'title' => $citation['title'],
+                    'link' => $citation['link'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         }
 
@@ -196,11 +180,7 @@ class WizardController extends Controller
         return redirect()->route('wizard.step4');
     }
 
-
-
-
-
-
+    // Hiển thị bước 4
     public function step4()
     {
         return view('wizard.step4');
