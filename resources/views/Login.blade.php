@@ -31,6 +31,7 @@
                 <div class="input-group">
                     <label for="login">Tên tài khoản / Địa chỉ email</label>
                     <input type="text" id="login" name="login" required>
+
                 </div>
                 <div class="input-group">
                     <label for="password">Mật khẩu</label>
@@ -41,7 +42,7 @@
                         <input type="checkbox" id="remember-me" name="remember-me">
                         <label for="remember-me">Giữ đăng nhập</label>
                     </div>
-                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    <a href="/Forget-pass" class="forgot-password">Quên mật khẩu?</a>
                 </div>
                 <button type="submit" class="login-btn">Đăng Nhập</button>
             </form>

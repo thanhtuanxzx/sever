@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\VerificationEmail; // Đảm bảo rằng bạn đã tạo lớp email này
+use App\Mail\VerificationEmail; 
+use App\Mail\ResetPasswordEmail;
+
 
 class AuthController extends Controller
 {
@@ -110,4 +112,66 @@ class AuthController extends Controller
 
         return redirect()->route('register.form')->with('error', 'Invalid verification link.');
     }
+
+    // Xử lý quên mật khẩu
+    public function forgetPassword(Request $request)
+    {
+        // Xác thực input
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255|exists:users,email',
+        ]);
+    
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+    
+        // Lấy người dùng theo email
+        $user = User::where('email', $request->email)->first();
+    
+        // Tạo token ngẫu nhiên
+        $token = \Str::random(60);
+        $user->token = $token; // Cập nhật token cho người dùng
+        $user->save();
+    
+        // Gửi email với link đặt lại mật khẩu
+        Mail::to($user->email)->send(new ResetPasswordEmail($token)); // Gửi token đến email
+    
+        return redirect()->back()->with('success', 'We have sent a password reset link to your email.');
+    }
+    public function showResetPasswordForm(Request $request)
+    {
+        return view('reset_password')->with(['token' => $request->token]);
+    }
+    public function resetPassword(Request $request)
+    {
+        // Xác thực dữ liệu nhập
+        
+        $validator = Validator::make($request->all(), [
+            'token' => 'required|string',
+            'email' => 'required|string|email|exists:users,email',
+            'password' => 'required|string|confirmed|min:8',
+        ]);
+    
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Tìm người dùng bằng email và token
+        $user = User::where('email', $request->email)->where('token', $request->token)->first();
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'Invalid token or email.');
+        }
+
+        // Cập nhật mật khẩu mới và xóa token
+        $user->password = Hash::make($request->password);
+        $user->token = null; // Xóa token sau khi đặt lại mật khẩu
+        $user->save();
+
+        return redirect()->route('login')->with('success', 'Your password has been reset successfully. You can now log in.');
+    }
+
+    
 }
+

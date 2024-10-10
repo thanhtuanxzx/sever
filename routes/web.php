@@ -49,7 +49,7 @@ Route::view('/Layout-index', 'view.Layout-index');
 Route::view('/Layout-view', 'view.Layout-view');
 Route::view('/auth-guidelines', 'auth-guidelines');
 Route::view('/rev-guidelines', 'rev-guidelines');
-
+Route::view('/Forget-pass','Forget-pass');
 
 
 Route::put('/user1', [UserController::class, 'update1'])->name('user.update1');
@@ -69,7 +69,9 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
-
+Route::post('/forgot-password', [AuthController::class, 'forgetPassword'])->name('password.forgot');
+Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('reset.password.form');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset.password');
 
 
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register.form');
