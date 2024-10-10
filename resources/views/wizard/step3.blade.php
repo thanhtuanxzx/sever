@@ -114,7 +114,7 @@
                         </div>
                         <button type="button" class="btn btn-primary mt-2" onclick="addCitation()">Thêm Trích Dẫn</button>
 
-                        <button type="submit" class="btn btn-success mt-3">Lưu và Tiếp Tục</button>
+                        <button type="submit" value="continue" class="btn btn-success mt-3">Lưu và Tiếp Tục</button>
                     </form>
                 </div>
             </div>
@@ -164,6 +164,31 @@
             const citationList = document.getElementById('citationList');
             citationList.removeChild(element.parentElement);
         }
+    </script>
+    <script>
+        let isFormSubmitted = false; // Biến kiểm tra nếu form đã submit
+
+        // Khi nút submit được nhấn
+        document.querySelector('.submitFormButton').addEventListener('click', function(event) {
+            if (this.value === 'continue') {
+                
+                isFormSubmitted = true;
+                window.removeEventListener('beforeunload', warnUser); // Xóa sự kiện beforeunload
+            }
+        });
+
+        // Hàm cảnh báo trước khi thoát trang
+        function warnUser(e) {
+            // Nếu form chưa submit, hiển thị cảnh báo thoát trang
+            if (!isFormSubmitted) {
+                e.preventDefault();
+                e.returnValue = ''; // Hiển thị cảnh báo thoát trang
+            }
+        }
+
+        // Gắn sự kiện trước khi thoát trang
+        window.addEventListener('beforeunload', warnUser);
+
     </script>
 </body>
 </html>

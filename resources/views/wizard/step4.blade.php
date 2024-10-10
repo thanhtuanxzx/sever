@@ -88,7 +88,7 @@
                         xem xét và điều chỉnh bất kỳ thông tin nào bạn đã nhập trước khi tiếp tục. Nếu bạn đã sẵn
                         sàng, hãy nhấp vào "Hoàn thành bài nộp" để gửi bài báo đến cho tạp chí.</p>
                     <div class="section formButtons form_buttons">
-                        <button class="pkp_button submitFormButton" type="submit">
+                        <button class="pkp_button submitFormButton" type="submit" value="continue" >
                             Hoàn thành và xác nhận
                         </button>
 
@@ -108,7 +108,31 @@
     </div>
     </div>
 
+    <script>
+        let isFormSubmitted = false; // Biến kiểm tra nếu form đã submit
 
+        // Khi nút submit được nhấn
+        document.querySelector('.submitFormButton').addEventListener('click', function(event) {
+            if (this.value === 'continue') {
+                
+                isFormSubmitted = true;
+                window.removeEventListener('beforeunload', warnUser); // Xóa sự kiện beforeunload
+            }
+        });
+
+        // Hàm cảnh báo trước khi thoát trang
+        function warnUser(e) {
+            // Nếu form chưa submit, hiển thị cảnh báo thoát trang
+            if (!isFormSubmitted) {
+                e.preventDefault();
+                e.returnValue = ''; // Hiển thị cảnh báo thoát trang
+            }
+        }
+
+        // Gắn sự kiện trước khi thoát trang
+        window.addEventListener('beforeunload', warnUser);
+
+    </script>
 
     <script src="{{asset('js/include.js')}}"></script>
     <script src="{{asset('JavaScript.js')}}"></script>
