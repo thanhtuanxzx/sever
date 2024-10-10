@@ -90,12 +90,16 @@
                         </div>                     
                     </div>
                     <div class="pkpListPanel__content">
+                        @if ($baiVietList->isEmpty())
+                    
                         <div class="pkpListPanel__empty"> Không tìm thấy bài báo nào. </div>
+                        @endif
                         <div class="pkpListPanelItem_summary">
 
 
 
                         @foreach ($baiVietList as $baiViet)
+                        @if ($wizardProgress->contains(fn($progress) => $progress->current_step != 5 && $progress->bai_viet_id == $baiViet->id_bai_viet))
                         <div class="pkpListPanel_Item">
                             <a href="">
                                 <div class="pkpPanel_Item_Detail">
@@ -131,7 +135,9 @@
                                 <button class="pkpListPanelItem_button">Xem chi tiết</button>
                             </div>
                         </div>
-                        @endforeach
+                        @endif
+                    @endforeach
+                   
 
 
 
@@ -162,7 +168,12 @@
                         </div> 
                     </div>
                     <div class="pkpListPanel__content">
-                        <div class="pkpListPanel__empty"> Không tìm thấy bài báo nào. </div>
+                    
+                  
+                    @if ($baiVietList->isEmpty())
+                    
+                    <div class="pkpListPanel__empty"> Không tìm thấy bài báo nào. </div>
+                    @endif
                         <div class="pkpListPanelItem_summary">
 
                         @foreach ($baiVietList as $baiViet)
