@@ -151,16 +151,23 @@ class WizardController extends Controller
         if ($request->has('coAuthors')) {
             foreach ($request->input('coAuthors') as $coAuthor) {
                 $user = User::where('email', $coAuthor['email'])->first();
-    
+        
                 if ($user) {
                     TacGiaBaiViet::create([
                         'id_tac_gia' => $user->id,
                         'id_bai_viet' => $baiViet->id_bai_viet,
                         'vai_tro' => $coAuthor['role'],
                     ]);
+                } else {
+                    // Dừng lại và hiển thị thông báo lỗi nếu không tìm thấy người dùng
+                    return redirect()->back()->with('error', "Không tìm thấy người dùng với email: {$coAuthor['email']}");
                 }
             }
+        
+           
         }
+        
+        
 
         // Xử lý trích dẫn
         if ($request->has('citations')) {

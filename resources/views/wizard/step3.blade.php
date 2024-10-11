@@ -91,6 +91,11 @@
                         </div>
 
                         <h4>Danh Sách Đồng Tác Giả</h4>
+                        @if(session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        @endif
                         <div id="coAuthorsContainer">
                             <div class="mb-3 co-author-item">
                                 <input type="text" class="form-control" name="coAuthors[0][name]" placeholder="Tên" required>
