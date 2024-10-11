@@ -22,10 +22,9 @@ class BaiViet extends Model
         'ngay_chap_nhan',
         'trang_thai',
         'tap',
-        'link_pdf',
-        'file_name',
-        'file_path',
-        'file_mime_type',
+ 
+        'original_name',
+        'generated_name',
         'ghichu',
     ];
 

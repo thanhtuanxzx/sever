@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WizardController;
 use App\Http\Controllers\TacGiaController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -36,4 +37,23 @@ Route::prefix('auth')->group(function () {
     // Route đặt lại mật khẩu
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
+
 Route::middleware('auth:sanctum')->get('/user/tokens', [AuthController::class, 'getUserTokens']);
+
+// Route cho bước 1
+Route::post('/wizard/step1', [WizardController::class, 'storeStep1']);
+
+// Route cho bước 2
+Route::post('/wizard/step2', [WizardController::class, 'storeStep2']);
+
+// Route cho bước 3
+Route::post('/wizard/step3', [WizardController::class, 'storeStep3']);
+
+// Route cho bước 4
+Route::post('/wizard/step4', [WizardController::class, 'storeStep4']);
+
+// Route cho bước 5
+Route::post('/wizard/step5', [WizardController::class, 'storeStep5']);
+
+// Route cho trang hoàn thành wizard
+Route::get('/wizard/completed', [WizardController::class, 'completed']);

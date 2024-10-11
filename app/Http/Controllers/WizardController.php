@@ -11,16 +11,13 @@ use App\Models\Citation;
 use App\Models\TacGiaBaiViet;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File; // Thêm dòng này
+use Illuminate\Http\JsonResponse;
 
 class WizardController extends Controller
 {
-    // Hiển thị bước 1
-    public function step1()
-    {
-        return view('wizard.step1');
-    }
-
-    // Lưu dữ liệu bước 1
+    // API cho bước 1
     public function storeStep1(Request $request)
     {
         $request->validate([
@@ -41,72 +38,61 @@ class WizardController extends Controller
             'current_step' => 1
         ]);
 
-        // Lưu bai_viet_id vào session
-        $request->session()->put('bai_viet_id', $baiViet->id_bai_viet);
-
-        return redirect()->route('wizard.step2');
+        return response()->json([
+            'message' => 'Bước 1 đã lưu thành công',
+            'bai_viet_id' => $baiViet->id_bai_viet
+        ], 201);
     }
 
-    // Hiển thị bước 2
-    public function step2()
-    {
-        return view('wizard.step2');
-    }
+   // API cho bước 2 - Upload file và cập nhật thông tin bài viết
+   public function storeStep2(Request $request)
+   {
+        
+       // Tìm tiến trình của người dùng
+       $progress = WizardProgress::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
 
-    // Lưu dữ liệu bước 2
-    public function storeStep2(Request $request)
-    {
-        // Lấy tiến trình hiện tại của người dùng
-        $progress = WizardProgress::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
+       if (!$progress || $progress->current_step < 1) {
+           return response()->json(['error' => 'Tiến trình không tồn tại'], 404);
+       }
 
-        // Kiểm tra sự tồn tại và trạng thái của tiến trình
-        if (!$progress || $progress->current_step < 1) {
-            Log::error('Tiến trình không tồn tại cho người dùng.');
-            return redirect()->route('wizard.step1')->withErrors(['error' => 'Tiến trình không tồn tại.']);
-        }
+       // Lấy bài viết dựa trên tiến trình
+       $baiViet = BaiViet::find($progress->bai_viet_id);
+       if (!$baiViet) {
+           return response()->json(['error' => 'Bài viết không tồn tại'], 404);
+       }
 
-        // Xác thực dữ liệu tập tin
-        $request->validate([
-            'file' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
-        ]);
+       // Validate file tải lên
+       $request->validate([
+           'file' => 'nullable|file|max:2048', // Chấp nhận các loại file và tối đa 2MB
+       ]);
 
-        // Xử lý khi người dùng tải lên tập tin
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName(); // Tạo tên file duy nhất
-            $filePath = $file->storeAs('uploads', $fileName, 'public');
-            $fileMimeType = $file->getMimeType();
+       // Xử lý file upload
+       if ($request->hasFile('file')) {
+           $file = $request->file('file');
+           
+           // Tạo tên file mới ngẫu nhiên
+           $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
 
-            // Cập nhật thông tin tập tin cho bài viết
-            $baiViet = $progress->baiViet;
-            $baiViet->update([
-                'file_name' => $fileName,
-                'file_path' => $filePath,
-                'file_mime_type' => $fileMimeType,
-            ]);
+           // Lưu file vào thư mục 'uploads' trong public disk
+           $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
 
-            Log::info('Cập nhật tập tin cho bài viết.', [
-                'file_name' => $fileName,
-                'file_path' => $filePath,
-                'file_mime_type' => $fileMimeType,
-            ]);
-        }
+           // Cập nhật thông tin file vào bài viết
+           $baiViet->update([
+               'original_name' => $file->getClientOriginalName(),
+               'generated_name' => $generatedFileName,
+           ]);
 
-        // Cập nhật bước hiện tại
-        $progress->update(['current_step' => 2]);
+           return response()->json(['message' => 'File tải lên thành công và bài viết đã được cập nhật']);
+       }
 
-        return redirect()->route('wizard.step3');
-    }
+       return response()->json(['message' => 'Không có file nào được tải lên'], 200);
+   }
 
-    // Hiển thị bước 3
-    public function step3()
-    {
-        return view('wizard.step3');
-    }
 
+
+    // API cho bước 3
     public function storeStep3(Request $request)
     {
-        // Xác thực dữ liệu đầu vào
         $request->validate([
             'tieu_de' => 'required|string|max:255',
             'tom_tat' => 'nullable|string|max:250',
@@ -120,22 +106,18 @@ class WizardController extends Controller
             'coAuthors.*.role' => 'required|string',
         ]);
 
-        // Lấy tiến trình hiện tại của người dùng
         $progress = WizardProgress::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
         $baiViet = $progress->baiViet;
 
-        // Kiểm tra bài viết
         if (!$baiViet || !$baiViet->id_bai_viet) {
-            return redirect()->route('wizard.step1')->withErrors(['error' => 'Bài viết không tồn tại hoặc ID bài viết không hợp lệ.']);
+            return response()->json(['error' => 'Bài viết không tồn tại'], 404);
         }
 
-        // Cập nhật thông tin bài viết
         $baiViet->update([
             'tieu_de' => $request->input('tieu_de'),
             'tom_tat' => $request->input('tom_tat'),
         ]);
 
-        // Xử lý từ khóa
         $tuKhoa = preg_split('/\r\n|\r|\n/', $request->input('tu_khoa'));
         foreach ($tuKhoa as $keyword) {
             $keyword = trim($keyword);
@@ -147,11 +129,10 @@ class WizardController extends Controller
             }
         }
 
-        // Xử lý danh sách đồng tác giả
         if ($request->has('coAuthors')) {
             foreach ($request->input('coAuthors') as $coAuthor) {
                 $user = User::where('email', $coAuthor['email'])->first();
-        
+
                 if ($user) {
                     TacGiaBaiViet::create([
                         'id_tac_gia' => $user->id,
@@ -159,17 +140,11 @@ class WizardController extends Controller
                         'vai_tro' => $coAuthor['role'],
                     ]);
                 } else {
-                    // Dừng lại và hiển thị thông báo lỗi nếu không tìm thấy người dùng
-                    return redirect()->back()->with('error', "Không tìm thấy người dùng với email: {$coAuthor['email']}");
+                    return response()->json(['error' => "Không tìm thấy người dùng với email: {$coAuthor['email']}"], 404);
                 }
             }
-        
-           
         }
-        
-        
 
-        // Xử lý trích dẫn
         if ($request->has('citations')) {
             foreach ($request->input('citations') as $citation) {
                 Citation::create([
@@ -184,44 +159,30 @@ class WizardController extends Controller
 
         $progress->update(['current_step' => 3]);
 
-        return redirect()->route('wizard.step4');
+        return response()->json(['message' => 'Bước 3 đã lưu thành công'], 200);
     }
 
-    // Hiển thị bước 4
-    public function step4()
-    {
-        return view('wizard.step4');
-    }
-
-    // Lưu dữ liệu bước 4
+    // API cho bước 4
     public function storeStep4(Request $request)
     {
         $progress = WizardProgress::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
         $progress->update(['current_step' => 4]);
 
-        return redirect()->route('wizard.step5');
+        return response()->json(['message' => 'Bước 4 đã lưu thành công'], 200);
     }
 
-    // Hiển thị bước 5
-    public function step5()
-    {
-        return view('wizard.step5');
-    }
-
-    // Lưu dữ liệu bước 5
+    // API cho bước 5
     public function storeStep5(Request $request)
     {
         $progress = WizardProgress::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
         $progress->update(['current_step' => 5]);
 
-        $request->session()->forget(['bai_viet_id', 'step1', 'step2', 'step3', 'step4', 'step5']);
-
-        return redirect()->route('Submissions');
+        return response()->json(['message' => 'Bài viết đã hoàn thành'], 200);
     }
 
-    // Hiển thị trang hoàn thành
+    // API hoàn thành
     public function completed()
     {
-        return view('Submissions');
+        return response()->json(['message' => 'Hoàn thành wizard'], 200);
     }
 }
