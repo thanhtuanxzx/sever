@@ -32,7 +32,7 @@ Route::get('/banner', [NavController::class, 'showBanner']);
 Route::get('/footer', function () {
     return view('includes.footer');
 });
-Route::view('/home', 'home');
+
 Route::view('/purpose-scope', 'purpose-scope');
 Route::view('/pub-freq', 'pub-freq');
 Route::view('/edit-ethics', 'edit-ethics');

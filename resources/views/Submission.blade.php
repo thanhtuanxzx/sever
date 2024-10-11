@@ -30,7 +30,8 @@
     @else
         <!-- Hiển thị khi người dùng chưa đăng nhập -->
         <div class="alert alert-info" id="loggedout">
-            <a href="{{ route('login') }}">Đăng nhập</a> hoặc <a href="{{ route('register') }}">Đăng kí</a> để gửi.
+        <a href="{{ route('login') }}">Đăng nhập</a> hoặc <a href="{{ route('register.form') }}">Đăng kí</a> để gửi.
+
         </div>
         <div class="alert alert-info" id="loggedin">
             <a href="">Gửi bài</a> hoặc <a href="">xem các bài viết của bạn.</a> đã gửi.
