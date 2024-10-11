@@ -17,11 +17,23 @@ use App\Http\Controllers\TacGiaController;
 
 use App\Http\Controllers\AuthController;
 
-Route::post('/register', [AuthController::class, 'register']);
+Route::prefix('auth')->group(function () {
+    // Route đăng ký
+    Route::post('register', [AuthController::class, 'register']);
 
-Route::post('/login', [AuthController::class, 'login']);
+    // Route đăng nhập
+    Route::post('login', [AuthController::class, 'login']);
 
-Route::post('/add-coauthor', [WizardController::class, 'addCoAuthor'])->name('api.add.coAuthor');
+    // Route xác nhận email
+    Route::get('verify-email', [AuthController::class, 'verifyEmail'])->name('auth.verifyEmail');
 
+    // Route quên mật khẩu
+    Route::post('forget-password', [AuthController::class, 'forgetPassword']);
 
-Route::post('/luu-dong-tac-gia/{baiViet}', [TacGiaController::class, 'luuDongTacGia']);
+    // Route hiển thị form đặt lại mật khẩu (trả về token)
+    Route::get('reset-password', [AuthController::class, 'showResetPasswordForm']);
+
+    // Route đặt lại mật khẩu
+    Route::post('reset-password', [AuthController::class, 'resetPassword']);
+});
+Route::middleware('auth:sanctum')->get('/user/tokens', [AuthController::class, 'getUserTokens']);

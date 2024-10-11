@@ -97,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::middleware('auth')->group(function () {
+    Route::post('/wizard',[WizardController::class,'storeStep'])->name('wizard');
     Route::view('/profile','Layout_index.profile');
     Route::get('/Submissions', [KtraController::class, 'showSubmissions'])->name('Submissions');
 

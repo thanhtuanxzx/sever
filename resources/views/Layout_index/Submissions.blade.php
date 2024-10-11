@@ -61,7 +61,7 @@
     </div>
     <div class="pkp_structure_main">
         <div class="pkp_structure_coldum">
-            <img src="/ass/img/logo.png" alt="">
+            <img src="/img/logo.png" alt="">
             <a href="#" class=""><span style="margin-right: 4px;"><i class="fa-solid fa-box"></i></span>Các bài báo</a>
         </div>
     
@@ -99,7 +99,17 @@
 
 
                         @foreach ($baiVietList as $baiViet)
+                        
                         @if ($wizardProgress->contains(fn($progress) => $progress->current_step != 5 && $progress->bai_viet_id == $baiViet->id_bai_viet))
+                        <form action="{{ route('wizard') }}" method="POST">
+                        @csrf
+                        @php
+                            // Lấy tiến trình tương ứng với bài viết hiện tại
+                            $progress = $wizardProgress->first(fn($p) => $p->bai_viet_id == $baiViet->id_bai_viet);
+                        @endphp
+                        <input type="hidden" name="current_step" value="{{ $progress->current_step }}">
+                        <input type="hidden" name="current_step" value="{{ $progress->current_step }}">
+    
                         <div class="pkpListPanel_Item">
                             <a href="">
                                 <div class="pkpPanel_Item_Detail">
@@ -108,6 +118,7 @@
                                     </span>
                                     <div class="pkpPanel_Item_Detail_nameheading">
                                         <span><p>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</p></span>
+                                       
                                         <span><p>{{ $baiViet->tieu_de }}</p></span>
                                     </div>
                                 </div>
@@ -132,9 +143,10 @@
                                         <span> || </span>Hoạt động cuối cùng được ghi lại vào {{ \Carbon\Carbon::parse($baiViet->updated_at)->format('d/m/Y') }}
                                     </label>
                                 </div>
-                                <button class="pkpListPanelItem_button">Xem chi tiết</button>
+                                <button type="submit" class="pkpListPanelItem_button">Xem chi tiết</button>
                             </div>
                         </div>
+                        </form>
                         @endif
                     @endforeach
                    
