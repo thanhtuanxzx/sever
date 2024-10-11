@@ -85,8 +85,19 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 
+Route::middleware(['auth'])->group(function () {
+    Route::group(['middleware' => 'checkQuyen:1'], function () {
+        Route::view('/bot-info', 'Board_of_Trustees.BoT-pbv-info')->name('bot.info');
+        Route::view('/bot', 'Board_of_Trustees.BoT')->name('bot');
+        Route::view('/counter-argument-detail', 'Counter_Argument.Counter-Argument-Detail')->name('counter.argument.detail');
+        Route::view('/counter-argument-view', 'Counter_Argument.Counter-Argument-view')->name('counter.argument.view');
+    });
+});
+
+
+
 Route::middleware('auth')->group(function () {
-    
+    Route::view('/profile','Layout_index.profile');
     Route::get('/Submissions', [KtraController::class, 'showSubmissions'])->name('Submissions');
 
     Route::get('/wizard/step1', [WizardController::class, 'step1'])
