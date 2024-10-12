@@ -22,7 +22,7 @@ class BaiViet extends Model
         'ngay_chap_nhan',
         'trang_thai',
         'tap',
- 
+        'user_id',
         'original_name',
         'generated_name',
         'ghichu',

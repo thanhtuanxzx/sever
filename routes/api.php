@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WizardController;
 use App\Http\Controllers\TacGiaController;
-
+use App\Http\Controllers\UserController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -23,7 +23,7 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
 
     // Route đăng nhập
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->name('login');
 
     // Route xác nhận email
     Route::get('verify-email', [AuthController::class, 'verifyEmail'])->name('auth.verifyEmail');
@@ -38,22 +38,22 @@ Route::prefix('auth')->group(function () {
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
 
-Route::middleware('auth:sanctum')->get('/user/tokens', [AuthController::class, 'getUserTokens']);
 
-// Route cho bước 1
-Route::post('/wizard/step1', [WizardController::class, 'storeStep1']);
+Route::middleware('auth:api')->group(function () {
+    Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
+    // Các route khác cần xác thực
+    Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
+    Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
+    Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);
+    Route::post('/wizard/step4/{id_bai_viet?}', [WizardController::class, 'storeStep4']);
+    Route::post('/wizard/step5/{id_bai_viet?}', [WizardController::class, 'storeStep5']);
+});
 
-// Route cho bước 2
-Route::post('/wizard/step2', [WizardController::class, 'storeStep2']);
-
-// Route cho bước 3
-Route::post('/wizard/step3', [WizardController::class, 'storeStep3']);
-
-// Route cho bước 4
-Route::post('/wizard/step4', [WizardController::class, 'storeStep4']);
-
-// Route cho bước 5
-Route::post('/wizard/step5', [WizardController::class, 'storeStep5']);
 
 // Route cho trang hoàn thành wizard
 Route::get('/wizard/completed', [WizardController::class, 'completed']);
+Route::put('/user/update1', [UserController::class, 'update1']);
+Route::put('/user/update2', [UserController::class, 'update2']);
+Route::put('/user/update3', [UserController::class, 'update3']);
+Route::put('/user/update4', [UserController::class, 'update4']);
+Route::put('/user/update5', [UserController::class, 'update5']);
