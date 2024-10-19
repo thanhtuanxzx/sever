@@ -39,4 +39,8 @@ class BaiViet extends Model
         'ngay_gui',
         'ngay_chap_nhan',
     ];
+    public function wizardProgress()
+    {
+        return $this->hasMany(WizardProgress::class, 'bai_viet_id'); // Giả sử khóa ngoại trong bảng wizard_progress là bai_viet_id
+    }
 }

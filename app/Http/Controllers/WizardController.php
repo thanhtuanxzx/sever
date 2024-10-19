@@ -13,7 +13,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class WizardController extends Controller
+   
 {
+    public function show()
+    {
+        // Lấy danh sách bài viết với current_step < 5
+        $baiViet = BaiViet::whereHas('wizardProgress', function ($query) {
+            $query->where('current_step', '<', 5); // Chỉ lấy current_step < 5
+        })->get();
+
+        // Trả về dữ liệu dưới dạng JSON
+        return response()->json($baiViet);
+    }
+    public function show1()
+    {
+        // Lấy danh sách bài viết với current_step < 5
+        $baiViet = BaiViet::whereHas('wizardProgress', function ($query) {
+            $query->where('current_step', '=', 5); 
+        })->get();
+
+        // Trả về dữ liệu dưới dạng JSON
+        return response()->json($baiViet);
+    }
     public function storeStep1(Request $request ,$id_bai_viet=null)
     {
         $request->validate([

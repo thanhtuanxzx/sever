@@ -39,8 +39,8 @@ return [
             'host' => 'smtp.gmail.com',
             'port' => 587,
             'encryption' => 'tls',
-            'username' => 'thanhtuamnguyen354@gmail.com',
-            'password' => 'wdnr wgnn mbzh hlwi',
+            'username' => 'tuanakiko23@gmail.com',
+            'password' => 'gaxd axyn wajq xsaf',
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
@@ -92,7 +92,7 @@ return [
     */
 
     'from' => [
-        'address' => 'thanhtuamnguyen354@gmailcom',
+        'address' => 'KhoahocCTUT@gmail.com',
         'name' => 'Tạp Chí Khoa Học',
     ],
 

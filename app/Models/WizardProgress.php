@@ -21,4 +21,5 @@ class WizardProgress extends Model
     {
         return $this->belongsTo(BaiViet::class, 'bai_viet_id');
     }
+    
 }

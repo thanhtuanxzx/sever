@@ -63,49 +63,49 @@ class UserController extends Controller
 
 
 
-public function update4(Request $request)
-{
-    $userId = Auth::id();
-    $user = User::find($userId);
-    
-    // Log thông tin user để kiểm tra
-    Log::info('User ID: ' . $userId);
-    Log::info('User info: ', $user->toArray());
-
-    // Validate file tải lên
-    $request->validate([
-        'file' => 'nullable|file|max:2048',
-    ]);
-
-
-    // Log thông tin file nếu có
-    if ($request->hasFile('file')) {
-        Log::info('File is uploaded');
+    public function update4(Request $request)
+    {
+        $userId = Auth::id();
+        $user = User::find($userId);
         
-        $file = $request->file('file');
-    
-        // Define the file name and path to store
-        $filename = time() . '_' . $file->getClientOriginalName();
-        Log::info('File name: ' . $filename);
+        // Log thông tin user để kiểm tra
+        Log::info('User ID: ' . $userId);
+        Log::info('User info: ', $user->toArray());
+
+        // Validate file tải lên
+        $request->validate([
+            'file' => 'nullable|file|max:2048',
+        ]);
+
+
+        // Log thông tin file nếu có
+        if ($request->hasFile('file')) {
+            Log::info('File is uploaded');
+            
+            $file = $request->file('file');
         
-        $filePath = $file->storeAs('uploads', $filename, 'public');
-        Log::info('File path: ' . $filePath);
+            // Define the file name and path to store
+            $filename = time() . '_' . $file->getClientOriginalName();
+            Log::info('File name: ' . $filename);
+            
+            $filePath = $file->storeAs('uploads', $filename, 'public');
+            Log::info('File path: ' . $filePath);
 
-        // Cập nhật thông tin user
-        $user->update(['file_path' => $filePath, 'file_name' => $filename]);
+            // Cập nhật thông tin user
+            $user->update(['file_path' => $filePath, 'file_name' => $filename]);
 
-        // Log xác nhận đã cập nhật
-        Log::info('User updated with file path and name');
+            // Log xác nhận đã cập nhật
+            Log::info('User updated with file path and name');
 
-        return response()->json([
-            'message' => 'File tải lên thành công và bài viết đã được cập nhật',
-            'file_path' => $filePath
-        ], 200);
+            return response()->json([
+                'message' => 'File tải lên thành công và bài viết đã được cập nhật',
+                'file_path' => $filePath
+            ], 200);
+        }
+
+        Log::warning('Không có file nào được tải lên');
+        return response()->json(['message' => 'Không có file nào được tải lên'], 200);
     }
-
-    Log::warning('Không có file nào được tải lên');
-    return response()->json(['message' => 'Không có file nào được tải lên'], 200);
-}
 
     
 
