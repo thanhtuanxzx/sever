@@ -25,7 +25,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|confirmed|min:8',
-            'agree_terms' => 'required|accepted',
+         
         ]);
 
         if ($validator->fails()) {
@@ -43,9 +43,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'agree_terms' => $request->has('agree_terms'),
-            'subscribe' => $request->has('subscribe'),
-            'reviewer' => $request->has('reviewer'),
+           
             'token' => $token
         ]);
 

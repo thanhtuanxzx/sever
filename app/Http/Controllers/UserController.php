@@ -6,14 +6,14 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Str;
+use App\Models\WizardProgress;
 class UserController extends Controller
 {
     public function update1(Request $request)
     {
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Người dùng chưa đăng nhập.'], 401);
-        }
+       
         // Lấy thông tin người dùng hiện tại
         $user = Auth::user();
 
@@ -61,52 +61,56 @@ class UserController extends Controller
         return response()->json(['message' => 'Cập nhật quyền và lĩnh vực nghiên cứu thành công!'], 200);
     }
 
-    public function update4(Request $request)
-    {
-        // Lấy thông tin người dùng hiện tại
-        $user = Auth::user();
 
-        // Xác thực dữ liệu đầu vào
-        $validatedData = $request->validate([
-            'tieusu' => 'nullable|string|max:255',
-            'linkurl' => 'nullable|url|max:255',
-            'avatar' => 'nullable|image|max:2048',
-        ]);
 
-        // Cập nhật thông tin tiểu sử và link URL
-        $user->tieusu = $validatedData['tieusu'] ?? $user->tieusu;
-        $user->linkurl = $validatedData['linkurl'] ?? $user->linkurl;
+public function update4(Request $request)
+{
+    $userId = Auth::id();
+    $user = User::find($userId);
+    
+    // Log thông tin user để kiểm tra
+    Log::info('User ID: ' . $userId);
+    Log::info('User info: ', $user->toArray());
 
-        // Kiểm tra và xử lý ảnh đại diện
-        if ($request->hasFile('avatar')) {
-            // Xóa ảnh đại diện cũ nếu có
-            if ($user->avatar) {
-                $oldAvatarPath = public_path('storage/' . $user->avatar);
-                if (file_exists($oldAvatarPath)) {
-                    unlink($oldAvatarPath); // Xóa ảnh cũ
-                }
-            }
+    // Validate file tải lên
+    $request->validate([
+        'file' => 'nullable|file|max:2048',
+    ]);
 
-            // Lưu ảnh mới
-            $fileName = time() . '_' . $request->file('avatar')->getClientOriginalName();
-            $path = 'uploads/avatars/';
-            $fullPath = public_path($path);
 
-            // Kiểm tra xem thư mục đã tồn tại chưa, nếu không thì tạo mới
-            if (!file_exists($fullPath)) {
-                mkdir($fullPath, 0755, true);
-            }
+    // Log thông tin file nếu có
+    if ($request->hasFile('file')) {
+        Log::info('File is uploaded');
+        
+        $file = $request->file('file');
+    
+        // Define the file name and path to store
+        $filename = time() . '_' . $file->getClientOriginalName();
+        Log::info('File name: ' . $filename);
+        
+        $filePath = $file->storeAs('uploads', $filename, 'public');
+        Log::info('File path: ' . $filePath);
 
-            // Lưu ảnh và cập nhật đường dẫn trong cơ sở dữ liệu
-            $request->file('avatar')->move($fullPath, $fileName);
-            $user->avatar = $path . $fileName;
-        }
+        // Cập nhật thông tin user
+        $user->update(['file_path' => $filePath, 'file_name' => $filename]);
 
-        // Lưu thông tin người dùng đã cập nhật
-        $user->save();
+        // Log xác nhận đã cập nhật
+        Log::info('User updated with file path and name');
 
-        return response()->json(['message' => 'Cập nhật thông tin cá nhân thành công!'], 200);
+        return response()->json([
+            'message' => 'File tải lên thành công và bài viết đã được cập nhật',
+            'file_path' => $filePath
+        ], 200);
     }
+
+    Log::warning('Không có file nào được tải lên');
+    return response()->json(['message' => 'Không có file nào được tải lên'], 200);
+}
+
+    
+
+    
+
 
     public function update5(Request $request)
     {
@@ -130,4 +134,18 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Cập nhật mật khẩu thành công!'], 200);
     }
+    public function show(Request $request)
+    {
+        // Lấy thông tin người dùng hiện tại
+        $user = Auth::user();
+
+        // Kiểm tra xem người dùng có tồn tại không
+        if (!$user) {
+            return response()->json(['message' => 'Người dùng không tồn tại.'], 404);
+        }
+
+        // Trả về thông tin người dùng
+        return response()->json($user, 200);
+    }
+
 }

@@ -37,9 +37,10 @@ Route::prefix('auth')->group(function () {
     // Route đặt lại mật khẩu
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
-
+Route::get('/user', [UserController::class, 'show'])->middleware('auth:api');
 
 Route::middleware('auth:api')->group(function () {
+    
     Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
     // Các route khác cần xác thực
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
@@ -47,13 +48,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);
     Route::post('/wizard/step4/{id_bai_viet?}', [WizardController::class, 'storeStep4']);
     Route::post('/wizard/step5/{id_bai_viet?}', [WizardController::class, 'storeStep5']);
-});
+    Route::get('/wizard/completed', [WizardController::class, 'completed']);
+    Route::put('/user/update1', [UserController::class, 'update1']);
+    Route::put('/user/update2', [UserController::class, 'update2']);
+    Route::put('/user/update3', [UserController::class, 'update3']);
+    Route::put('/user/update4', [UserController::class, 'update4']);
+    Route::put('/user/update5', [UserController::class, 'update5']);
+    });
 
 
 // Route cho trang hoàn thành wizard
-Route::get('/wizard/completed', [WizardController::class, 'completed']);
-Route::put('/user/update1', [UserController::class, 'update1']);
-Route::put('/user/update2', [UserController::class, 'update2']);
-Route::put('/user/update3', [UserController::class, 'update3']);
-Route::put('/user/update4', [UserController::class, 'update4']);
-Route::put('/user/update5', [UserController::class, 'update5']);
+

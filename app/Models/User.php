@@ -23,9 +23,7 @@ class User extends Authenticatable
         'email',
         'username',
         'password',
-        'agree_terms',
-        'subscribe',
-        'reviewer',
+      
         'status',
         'token',
         'chucdanh',
@@ -37,6 +35,9 @@ class User extends Authenticatable
         'file_name',       
         'file_path',       
         'file_mime_type', 
+        'avatar_original_name',
+        'avatar_mime_type',
+        'avatar_size',
         'linhvucnc' 
     ];
 
