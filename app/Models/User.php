@@ -23,7 +23,8 @@ class User extends Authenticatable
         'email',
         'username',
         'password',
-      
+        'bio',
+        'homepage_url',
         'status',
         'token',
         'chucdanh',
@@ -57,25 +58,6 @@ class User extends Authenticatable
         return $this->hasOne(TacGiaBaiViet::class, 'id_bai_viet');
     }
 
-    // Phương thức để lấy đường dẫn đầy đủ của file
-    public function getFileUrlAttribute()
-    {
-        return $this->file_path ? Storage::url($this->file_path) : null;
-    }
 
-    // Phương thức để cập nhật file
-    public function updateFile($file)
-    {
-        // Xóa file cũ nếu tồn tại
-        if ($this->file_path) {
-            Storage::delete($this->file_path);
-        }
-
-        // Lưu file mới và cập nhật các thuộc tính liên quan
-        $filePath = $file->store('user_files');
-        $this->file_name = $file->getClientOriginalName();
-        $this->file_path = $filePath;
-        $this->file_mime_type = $file->getClientMimeType();
-        $this->save();
-    }
+   
 }

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -66,37 +67,65 @@ class UserController extends Controller
     public function update4(Request $request)
     {
         
-        $user = Auth::user();
-    
-        // Xác thực dữ liệu đầu vào
-        $request->validate([
-            'file' => 'file|max:2048|mimes:jpeg,png,jpg,gif', // Kiểm tra loại file
-        ]);
-    
-        // Xử lý file upload 
+ 
+        // Khởi tạo biến để lưu thông báo lỗi
+        $errors = [];
 
-            $file = $request->file('file');
-            $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
-    
-            // Cập nhật thông tin file vào người dùng
-            $user->avatar_original_name = $file->getClientOriginalName();
-            $user->avatar = $generatedFileName;
-    
-            // Lưu thông tin người dùng
-            if ($user->save()) {
-                return response()->json(['message' => 'File tải lên thành công và thông tin người dùng đã được cập nhật'], 200);
+        // Kiểm tra và xác thực dữ liệu
+        try {
+            $request->validate([
+                'profile_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'bio' => 'string|max:1000', // Tiểu sử là trường bắt buộc
+                'homepage_url' => 'nullable|url', // Kiểm tra URL hợp lệ
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Lưu các lỗi vào biến
+            $errors = $e->validator->errors()->toArray();
+        }
+
+        // Lưu ảnh nếu có và không có lỗi
+        if (empty($errors)) {
+            if ($request->hasFile('profile_image')) {
+                $file = $request->file('profile_image');
+                $fileName = time() . '_' . $file->getClientOriginalName(); // Tạo tên file duy nhất
+                $path = $file->storeAs('public/avatars', $fileName); // Lưu vào thư mục avatars
+                $profileImageUrl = Storage::url($path); // Lấy URL của ảnh
             } else {
-                return response()->json(['message' => 'Có lỗi khi cập nhật thông tin người dùng'], 500);
+                $profileImageUrl = null;
             }
-        
-    
-        // Trả về phản hồi khi không có file nào được tải lên
-        return response()->json([
-            'message' => 'Không có file nào được tải lên',
-         
-        ], 200);
+
+            // Lấy dữ liệu từ request
+            $bio = $request->input('bio');
+            $homepageUrl = $request->input('homepage_url');
+
+            // Xử lý lưu trữ thông tin vào cơ sở dữ liệu
+            $user = auth()->user();
+            $user->bio = $bio;
+            $user->homepage_url = $homepageUrl;
+            if ($profileImageUrl) {
+                $user->avatar = $profileImageUrl;
+            }
+            // dd($bio, $homepageUrl, $profileImageUrl);
+
+
+            // Trả về phản hồi thành công
+            return response()->json([
+                'message' => 'Hồ sơ đã được cập nhật thành công',
+                'data' => [
+                    'bio' => $bio,
+                    'homepage_url' => $homepageUrl,
+                    'profile_image' => $profileImageUrl,
+                ]
+            ]);
+        } else {
+            // Nếu có lỗi, trả về lỗi
+            return response()->json([
+                'message' => 'Có lỗi xảy ra',
+                'errors' => $errors,
+            ], 422); // Trả về mã trạng thái 422 Unprocessable Entity
+        }
     }
+
     
 
     
