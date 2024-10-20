@@ -105,6 +105,7 @@ class UserController extends Controller
             if ($profileImageUrl) {
                 $user->avatar = $profileImageUrl;
             }
+            $user->save();
             // dd($bio, $homepageUrl, $profileImageUrl);
 
 
