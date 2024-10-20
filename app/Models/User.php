@@ -21,10 +21,9 @@ class User extends Authenticatable
         'phone',
         'nationality',
         'email',
-        'username',
-        'password',
         'bio',
         'homepage_url',
+        'username',
         'status',
         'token',
         'chucdanh',
@@ -33,13 +32,7 @@ class User extends Authenticatable
         'tieusu',
         'linkurl',
         'avatar',
-        'file_name',       
-        'file_path',       
-        'file_mime_type', 
-        'avatar_original_name',
-        'avatar_mime_type',
-        'avatar_size',
-        'linhvucnc' 
+        'linhvucnc',
     ];
 
     // Các thuộc tính bị ẩn khi trả về dữ liệu người dùng
