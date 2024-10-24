@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WizardController;
 use App\Http\Controllers\TacGiaController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ChatController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -40,10 +41,15 @@ Route::prefix('auth')->group(function () {
 Route::get('/user', [UserController::class, 'show'])->middleware('auth:api');
 
 Route::middleware('auth:api')->group(function () {
+    Route::post('/send-message', [ChatController::class, 'sendMessage']);
+    Route::get('/messages', [ChatController::class, 'getMessages']);
+    Route::put('/message/{id}', [ChatController::class, 'updateMessage']);  
+    Route::delete('/message/{id}', [ChatController::class, 'deleteMessage']);  
+
     Route::get('/bai-viet', [WizardController::class, 'show']);
     Route::get('/bai-viet1', [WizardController::class, 'show1']);
     Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
-    // Các route khác cần xác thực
+    // Các route khác cần xác thực  
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
     Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
     Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);
