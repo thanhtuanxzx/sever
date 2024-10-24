@@ -26,6 +26,7 @@ class BaiViet extends Model
         'original_name',
         'generated_name',
         'ghichu',
+        'citations',
     ];
 
     // Nếu bạn muốn tự động quản lý các timestamp

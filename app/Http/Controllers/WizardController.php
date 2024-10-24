@@ -162,9 +162,8 @@ class WizardController extends Controller
             'tieu_de' => 'required|string|max:255',
             'tom_tat' => 'nullable|string|max:250',
             'tu_khoa' => 'nullable|string',
-            'citations' => 'nullable|array',
-            'citations.*.title' => 'required|string|max:255',
-            'citations.*.link' => 'required|url',
+            'citations' => 'string',
+        
             'coAuthors' => 'nullable|array',
             'coAuthors.*.name' => 'required|string',
             'coAuthors.*.email' => 'required|email',
@@ -191,6 +190,7 @@ class WizardController extends Controller
         $baiViet->update([
             'tieu_de' => $request->input('tieu_de'),
             'tom_tat' => $request->input('tom_tat'),
+            'citations'=>$request->input('citations'),
         ]);
     
         // Xử lý từ khóa
@@ -225,17 +225,17 @@ class WizardController extends Controller
         }
     
         // Xử lý tài liệu tham khảo
-        if ($request->has('citations')) {
-            foreach ($request->input('citations') as $citation) {
-                Citation::create([
-                    'id_bai_viet' => $baiViet->id_bai_viet,
-                    'title' => $citation['title'],
-                    'link' => $citation['link'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
+        // if ($request->has('citations')) {
+        //     foreach ($request->input('citations') as $citation) {
+        //         Citation::create([
+        //             'id_bai_viet' => $baiViet->id_bai_viet,
+        //             'title' => $citation['title'],
+        //             'link' => $citation['link'],
+        //             'created_at' => now(),
+        //             'updated_at' => now(),
+        //         ]);
+        //     }
+        // }
     
         // Cập nhật current_step
         $progress->update(['current_step' => 3]);
