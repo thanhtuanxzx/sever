@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationEmail; 
 use App\Mail\ResetPasswordEmail;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -29,7 +30,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['status' => 422,'errors' => $validator->errors()], 422);
         }
 
         $token = \Str::random(60);
@@ -49,7 +50,7 @@ class AuthController extends Controller
 
         Mail::to($user->email)->send(new VerificationEmail($user));
 
-        return response()->json(['message' => 'User registered successfully. Please verify your email.'], 201);
+        return response()->json(['status' => 201,'message' => 'User registered successfully. Please verify your email.'], 201);
     }
 
     // API Đăng nhập người dùng
@@ -61,49 +62,53 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
         }
 
         $login = $request->input('login');
         $password = $request->input('password');
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
         $credentials = [$fieldType => $login, 'password' => $password];
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user(); // Lấy thông tin người dùng đã đăng nhập
-            $token = $user->createToken('YourAppName')->plainTextToken; // Tạo token cá nhân
-
-            return response()->json(['message' => 'Login successful', 'token' => $token], 200);
+        $user = User::where($fieldType, $login)->first();
+         // Kiểm tra nếu người dùng tồn tại và đã được kích hoạt
+         if (!$user || $user->status !== 'active') {
+            return response()->json(['status' => 403, 'message' => 'Your account is not activated.'], 403);
         }
 
-        return response()->json(['message' => 'Unauthorized'], 401);
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return response()->json(['status' => 401, 'message' => 'Invalid credentials'], 401);
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Login successful', 'token' => $token], 200);
     }
+
 
     public function getUserTokens()
     {
-        // Lấy ID người dùng hiện tại
-        $userId = Auth::id(); // Lấy ID người dùng hiện tại
+      
+        $userId = Auth::id(); 
 
         // Kiểm tra nếu không có người dùng đã đăng nhập
         if (!$userId) {
-            return response()->json(['error' => 'User not authenticated'], 401);
+            return response()->json(['status' => 401,'error' => 'User not authenticated'], 401);
         }
 
-        // Tìm người dùng và lấy tất cả các token cá nhân
-        $user = User::find($userId); // Tìm người dùng theo ID
+      
+        $user = User::find($userId); 
 
         if ($user) {
-            $tokens = $user->tokens; // Lấy tất cả token cá nhân của người dùng
-            return response()->json($tokens); // Trả về danh sách token
+            $tokens = $user->tokens; 
+            return response()->json($tokens); 
         }
 
-        return response()->json(['error' => 'User not found'], 404);
+        return response()->json(['status' => 404,'error' => 'User not found'], 404);
     }
 
     // Xác thực email
     public function verifyEmail(Request $request)
     {
+        $request->validate(['token' => 'required|string']);
         $user = User::where('token', $request->token)->first();
 
         if ($user) {
@@ -111,10 +116,10 @@ class AuthController extends Controller
             $user->token = null;
             $user->save();
 
-            return response()->json(['message' => 'Email verified successfully.'], 200);
+            return response()->json(['status' => 200,'message' => 'Email verified successfully.'], 200);
         }
 
-        return response()->json(['message' => 'Invalid verification link.'], 400);
+        return response()->json(['status' => 400,'message' => 'Invalid verification link.'], 400);
     }
 
     // Quên mật khẩu
@@ -125,7 +130,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['status' => 422,'errors' => $validator->errors()], 422);
         }
 
         $user = User::where('email', $request->email)->first();
@@ -135,13 +140,13 @@ class AuthController extends Controller
 
         Mail::to($user->email)->send(new ResetPasswordEmail($token));
 
-        return response()->json(['message' => 'Password reset link sent to your email.'], 200);
+        return response()->json(['status' => 200,'message' => 'Password reset link sent to your email.'], 200);
     }
 
     // Hiển thị form đặt lại mật khẩu (API không cần form)
     public function showResetPasswordForm(Request $request)
     {
-        return response()->json(['token' => $request->token], 200);
+        return response()->json(['status' => 200,'token' => $request->token], 200);
     }
 
     // Đặt lại mật khẩu
@@ -154,19 +159,29 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json(['status' => 422,'errors' => $validator->errors()], 422);
         }
 
         $user = User::where('email', $request->email)->where('token', $request->token)->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Invalid token or email.'], 400);
+            return response()->json(['status' => 400,'message' => 'Invalid token or email.'], 400);
         }
 
         $user->password = Hash::make($request->password);
         $user->token = null;
         $user->save();
 
-        return response()->json(['message' => 'Password reset successfully.'], 200);
+        return response()->json(['status' => 200,'message' => 'Password reset successfully.'], 200);
     }
+    public function logout(Request $request)
+    {
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->json(['status' => 200, 'message' => 'Logout successful'], 200);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json(['status' => 500, 'message' => 'Failed to logout, please try again'], 500);
+        }
+    }
+    
 }

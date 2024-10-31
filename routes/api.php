@@ -20,25 +20,32 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AuthController;
 
 Route::prefix('auth')->group(function () {
-    // Route đăng ký
+  
     Route::post('register', [AuthController::class, 'register']);
 
-    // Route đăng nhập
+
     Route::post('login', [AuthController::class, 'login'])->name('login');
 
-    // Route xác nhận email
-    Route::get('verify-email', [AuthController::class, 'verifyEmail'])->name('auth.verifyEmail');
+  
+    Route::get('verify-email', [AuthController::class, 'verifyEmail']);
 
-    // Route quên mật khẩu
+
     Route::post('forget-password', [AuthController::class, 'forgetPassword']);
 
-    // Route hiển thị form đặt lại mật khẩu (trả về token)
+   
     Route::get('reset-password', [AuthController::class, 'showResetPasswordForm']);
 
-    // Route đặt lại mật khẩu
+   
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('logout', [AuthController::class, 'logout']);
 });
+
 Route::get('/user', [UserController::class, 'show'])->middleware('auth:api');
+
+Route::post('/users/email', [WizardController::class, 'getUserByEmail'])->name('users.email.get');
+
+Route::get('/tac-gia/{id_bai_viet}', [WizardController::class, 'getAuthorIdByBaiVietId']);
+
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
@@ -64,6 +71,5 @@ Route::middleware('auth:api')->group(function () {
 
     });
 
-   
-// Route cho trang hoàn thành wizard
+
 

@@ -28,7 +28,7 @@ class UserController extends Controller
 
         $user->update($validatedData);
 
-        return response()->json(['message' => 'Cập nhật thông tin cá nhân thành công!'], 200);
+        return response()->json(['status' => 200,'message' => 'Cập nhật thông tin cá nhân thành công!'], 200);
     }
 
     public function update2(Request $request)
@@ -43,7 +43,7 @@ class UserController extends Controller
 
         $user->update($validatedData);
 
-        return response()->json(['message' => 'Cập nhật tổ chức thành công!'], 200);
+        return response()->json(['status' => 200,'message' => 'Cập nhật tổ chức thành công!'], 200);
     }
 
     public function update3(Request $request)
@@ -59,7 +59,7 @@ class UserController extends Controller
 
         $user->update($validatedData);
 
-        return response()->json(['message' => 'Cập nhật quyền và lĩnh vực nghiên cứu thành công!'], 200);
+        return response()->json(['status' => 200,'message' => 'Cập nhật quyền và lĩnh vực nghiên cứu thành công!'], 200);
     }
 
 
@@ -111,6 +111,7 @@ class UserController extends Controller
 
             // Trả về phản hồi thành công
             return response()->json([
+                'status' => 200,
                 'message' => 'Hồ sơ đã được cập nhật thành công',
                 'data' => [
                     'bio' => $bio,
@@ -121,6 +122,7 @@ class UserController extends Controller
         } else {
             // Nếu có lỗi, trả về lỗi
             return response()->json([
+                'status' => 422,
                 'message' => 'Có lỗi xảy ra',
                 'errors' => $errors,
             ], 422); // Trả về mã trạng thái 422 Unprocessable Entity
@@ -147,14 +149,14 @@ class UserController extends Controller
 
         // Kiểm tra mật khẩu hiện tại
         if (!Hash::check($validatedData['current_password'], $user->password)) {
-            return response()->json(['message' => 'Mật khẩu hiện tại không chính xác.'], 403);
+            return response()->json(['status' => 403,'message' => 'Mật khẩu hiện tại không chính xác.'], 403);
         }
 
         // Cập nhật mật khẩu mới
         $user->password = Hash::make($validatedData['new_password']);
         $user->save();
 
-        return response()->json(['message' => 'Cập nhật mật khẩu thành công!'], 200);
+        return response()->json(['status' => 200,'message' => 'Cập nhật mật khẩu thành công!'], 200);
     }
     public function show(Request $request)
     {
@@ -163,7 +165,7 @@ class UserController extends Controller
 
         // Kiểm tra xem người dùng có tồn tại không
         if (!$user) {
-            return response()->json(['message' => 'Người dùng không tồn tại.'], 404);
+            return response()->json(['status' => 404,'message' => 'Người dùng không tồn tại.'], 404);
         }
 
         // Trả về thông tin người dùng

@@ -42,7 +42,7 @@ return [
         ],
     
         'api' => [
-            'driver' => 'sanctum', // hoặc 'passport' nếu dùng Passport
+            'driver' => 'jwt',
             'provider' => 'users',
     
       
