@@ -53,13 +53,13 @@ class UserController extends Controller
 
         // Xác thực dữ liệu đầu vào
         $validatedData = $request->validate([
-            'quyen' => 'required|boolean',
+            // 'quyen' => 'required|boolean',
             'linhvucnc' => 'required|string|max:255',
         ]);
 
         $user->update($validatedData);
 
-        return response()->json(['status' => 200,'message' => 'Cập nhật quyền và lĩnh vực nghiên cứu thành công!'], 200);
+        return response()->json(['status' => 200,'message' => 'Cập nhật lĩnh vực nghiên cứu thành công!'], 200);
     }
 
 
@@ -129,8 +129,20 @@ class UserController extends Controller
         }
     }
 
+    public function getAvatar(Request $request)
+    {
+        // Lấy người dùng đã xác thực
+        $user = $request->user();
     
-
+        // Lấy đường dẫn avatar
+        $avatarPath = $user->avatar;
+    
+        // Trả về tên tệp của avatar
+        return response()->json([
+            'avatar' => basename($avatarPath), // Chỉ lấy tên tệp
+        ]);
+    }
+    
     
 
     

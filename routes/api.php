@@ -20,6 +20,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\AuthController;
 
 Route::prefix('auth')->group(function () {
+   
   
     Route::post('register', [AuthController::class, 'register']);
 
@@ -59,6 +60,7 @@ Route::middleware('auth:api')->group(function () {
     // Các route khác cần xác thực  
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
     Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
+    Route::post('/wizard/step21/{id_bai_viet?}', [WizardController::class, 'storeStep21']);
     Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);
     Route::post('/wizard/step4/{id_bai_viet?}', [WizardController::class, 'storeStep4']);
     Route::post('/wizard/step5/{id_bai_viet?}', [WizardController::class, 'storeStep5']);
@@ -68,8 +70,15 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/user/update3', [UserController::class, 'update3']);
     Route::post('/user/update4', [UserController::class, 'update4']);
     Route::put('/user/update5', [UserController::class, 'update5']);
+    Route::get('/auth/avatar', [UserController::class, 'getAvatar']);
+
 
     });
 
+     Route::get('avatar/{filename}', function ($filename) {
+        return Storage::disk('public')->response('avatars/' . $filename);
+    });
+    
+    
 
 

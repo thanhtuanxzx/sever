@@ -8,9 +8,13 @@ use App\Models\TuKhoa;
 use App\Models\Citation;
 use App\Models\TacGiaBaiViet;
 use App\Models\WizardProgress;
+use App\Models\File;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Facades\Storage;
 
 class WizardController extends Controller
    
@@ -71,29 +75,47 @@ class WizardController extends Controller
     }
     public function show()
     {  
-        // Lấy danh sách bài viết với current_step < 5
-        $baiViet = BaiViet::whereHas('wizardProgress', function ($query) {
-            $query->where('current_step', '<', 5); // Chỉ lấy current_step < 5
-        })->get();
-
+        $userId = Auth::id(); // Lấy ID người dùng đã xác thực
+    
+        // Kiểm tra người dùng có xác thực hay không
+        if (!$userId) {
+            return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
+        }
+    
+        // Lấy danh sách bài viết với current_step < 5 của người dùng hiện tại
+        $baiViet = BaiViet::where('user_id', $userId) // Lọc theo user_id
+            ->whereHas('wizardProgress', function ($query) {
+                $query->where('current_step', '<', 5); // Chỉ lấy current_step < 5
+            })->get();
+    
         // Trả về dữ liệu dưới dạng JSON
         return response()->json($baiViet);
     }
+    
     public function show1()
     {
-        // Lấy danh sách bài viết với current_step < 5
-        $baiViet = BaiViet::whereHas('wizardProgress', function ($query) {
-            $query->where('current_step', '=', 5); 
-        })->get();
-
+        $userId = Auth::id(); // Lấy ID người dùng đã xác thực
+    
+        // Kiểm tra người dùng có xác thực hay không
+        if (!$userId) {
+            return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
+        }
+    
+        // Lấy danh sách bài viết với current_step = 4 của người dùng hiện tại
+        $baiViet = BaiViet::where('user_id', $userId) // Lọc theo user_id
+            ->whereHas('wizardProgress', function ($query) {
+                $query->where('current_step', '=', 4); 
+            })->get();
+    
         // Trả về dữ liệu dưới dạng JSON
         return response()->json($baiViet);
     }
+    
     public function storeStep1(Request $request ,$id_bai_viet=null)
     {
         $request->validate([
             'chu_de' => 'required|string|max:255',
-            'ghichu' => 'nullable|string',
+            'ghichu' => 'required|string',
         ]);
         
         $userId = Auth::id();
@@ -158,52 +180,144 @@ class WizardController extends Controller
     }
     
 
-    public function storeStep2(Request $request, $id_bai_viet = null)
+    // public function storeStep2(Request $request, $id_bai_viet = null)
+    // {
+    //     $userId = Auth::id();
+
+    //     if (!$userId) {
+    //         return response()->json(['status' => 401,'error' => 'User not authenticated'], 401);
+    //     }
+
+    //     // Lấy tiến trình của người dùng
+    //     $progress = WizardProgress::where('user_id', $userId)
+    //         ->where('bai_viet_id', $id_bai_viet)
+    //         ->first();
+    
+    //     if (!$progress) {
+    //         return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
+    //     }
+    
+    //     // Lấy bài viết dựa trên id_bai_viet
+    //     $baiViet = BaiViet::find($id_bai_viet);
+    
+    //     if (!$baiViet || $baiViet->user_id !== $userId) {
+    //         return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+    //     }
+
+    //     // Validate file tải lên
+    //     $request->validate([
+    //         'file' => 'nullable|file|max:2048',
+    //     ]);
+
+       
+    
+    //     // Xử lý file upload nếu có file mới được tải lên
+    //     if ($request->hasFile('file')) {
+    //         $file = $request->file('file');
+    
+    //         // Xóa file cũ nếu tồn tại
+    //         if ($baiViet->generated_name) {
+    //             Storage::disk('public')->delete('uploads/' . $baiViet->generated_name);
+    //         }
+    
+    //         // Tạo tên file mới và lưu trữ file
+    //         $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
+    //         $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
+    
+    //         // Cập nhật thông tin file vào bài viết
+    //         $baiViet->update([
+    //             'original_name' => $file->getClientOriginalName(),
+    //             'generated_name' => $generatedFileName,
+    //         ]);
+    
+    //         return response()->json(['status' => 300,'message' => 'File tải lên thành công và bài viết đã được cập nhật']);
+    //     }
+
+    //     return response()->json(['status' => 200,'message' => 'Không có file nào được tải lên'], 200);
+    // }
+
+    public function storeStep2(Request $request, $baiVietId = null)
     {
         $userId = Auth::id();
-
+    
+        // Kiểm tra người dùng có xác thực hay không
         if (!$userId) {
-            return response()->json(['status' => 401,'error' => 'User not authenticated'], 401);
-        }
-
-        // Lấy tiến trình của người dùng
-        $progress = WizardProgress::where('user_id', $userId)
-            ->where('bai_viet_id', $id_bai_viet)
-            ->first();
-    
-        if (!$progress) {
-            return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
+            return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
         }
     
-        // Lấy bài viết dựa trên id_bai_viet
-        $baiViet = BaiViet::find($id_bai_viet);
+        // Tìm bài viết
+        $baiViet = BaiViet::find($baiVietId);
     
+        // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
         if (!$baiViet || $baiViet->user_id !== $userId) {
-            return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+            return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
         }
-
-        // Validate file tải lên
+    
+        // Validate các file đã tải lên
         $request->validate([
-            'file' => 'nullable|file|max:2048',
+            'file.*' => 'file|max:2048', // Cho phép nhiều file
         ]);
-
-        // Xử lý file upload
+    
+        // Nếu có file mới được tải lên
         if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
-
-            // Cập nhật thông tin file vào bài viết
-            $baiViet->update([
-                'original_name' => $file->getClientOriginalName(),
-                'generated_name' => $generatedFileName,
-            ]);
-
-            return response()->json(['message' => 'File tải lên thành công và bài viết đã được cập nhật']);
+            // Lấy tất cả file cũ
+            $oldFiles = File::where('id_bai_viet', $baiVietId)->get();
+    
+            // Xóa tất cả file cũ
+            foreach ($oldFiles as $oldFile) {
+                $oldFilePath = 'uploads/' . $oldFile->generated_name;
+    
+                // Xóa file nếu tồn tại
+                if (Storage::disk('public')->exists($oldFilePath)) {
+                    Storage::disk('public')->delete($oldFilePath);
+                }
+    
+                // Xóa bản ghi trong cơ sở dữ liệu
+               File::where('id_bai_viet', $baiVietId)->delete();
+            }
+    
+            // Lưu file mới
+            $files = $request->file('file');
+    
+            // Nếu chỉ một file được tải lên, chuyển đổi nó thành mảng để xử lý nhất quán
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+    
+            foreach ($files as $file) {
+                // Tạo tên file mới
+                $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
+    
+                // Tạo hoặc cập nhật thông tin file trong cơ sở dữ liệu
+                File::updateOrCreate(
+                    ['id_bai_viet' => $baiVietId, 'generated_name' => $generatedFileName],
+                    [
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $filePath,
+                        'file_mime_type' => $file->getMimeType(),
+                    ]
+                );
+            }
+    
+            return response()->json(['status' => 200, 'message' => 'Các tệp đã được tải lên thành công và bài viết đã được cập nhật']);
         }
-
-        return response()->json(['status' => 200,'message' => 'Không có file nào được tải lên'], 200);
+    
+        return response()->json(['status' => 200, 'message' => 'Không có tệp nào được tải lên'], 200);
     }
+    
+
+    
+    
+    
+    
+   
+    
+
+
+    
+    
+
 
     public function storeStep3(Request $request, $id_bai_viet = null)
     {
@@ -326,33 +440,33 @@ class WizardController extends Controller
         return response()->json(['status' => 200,'message' => 'Bước 4 đã lưu thành công'], 200);
     }
 
-    public function storeStep5(Request $request, $id_bai_viet = null)
-    {
-        $userId = Auth::id();
+    // public function storeStep5(Request $request, $id_bai_viet = null)
+    // {
+    //     $userId = Auth::id();
 
-        if (!$userId) {
-            return response()->json(['status' => 401,'error' => 'User not authenticated'], 401);
-        }
+    //     if (!$userId) {
+    //         return response()->json(['status' => 401,'error' => 'User not authenticated'], 401);
+    //     }
 
-         // Lấy tiến trình của người dùng
-         $progress = WizardProgress::where('user_id', $userId)
-         ->where('bai_viet_id', $id_bai_viet)
-         ->first();
+    //      // Lấy tiến trình của người dùng
+    //      $progress = WizardProgress::where('user_id', $userId)
+    //      ->where('bai_viet_id', $id_bai_viet)
+    //      ->first();
     
-        if (!$progress) {
-            return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
-        }
+    //     if (!$progress) {
+    //         return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
+    //     }
     
-        // Lấy bài viết dựa trên id_bai_viet
-        $baiViet = BaiViet::find($id_bai_viet);
+    //     // Lấy bài viết dựa trên id_bai_viet
+    //     $baiViet = BaiViet::find($id_bai_viet);
     
-        if (!$baiViet || $baiViet->user_id !== $userId) {
-            return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
-        }
+    //     if (!$baiViet || $baiViet->user_id !== $userId) {
+    //         return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+    //     }
 
    
-        $progress->update(['current_step' => 5]);
+    //     $progress->update(['current_step' => 5]);
 
-        return response()->json(['status' => 200,'message' => 'Bước 5 đã hoàn thành và bài viết đã được gửi'], 200);
-    }
+    //     return response()->json(['status' => 200,'message' => 'Bước 5 đã hoàn thành và bài viết đã được gửi'], 200);
+    // }
 }
