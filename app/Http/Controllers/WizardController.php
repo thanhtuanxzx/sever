@@ -9,7 +9,7 @@ use App\Models\Citation;
 use App\Models\TacGiaBaiViet;
 use App\Models\WizardProgress;
 use App\Models\File;
-
+use App\Models\ChuyenDe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -114,8 +114,9 @@ class WizardController extends Controller
     public function storeStep1(Request $request ,$id_bai_viet=null)
     {
         $request->validate([
-            'chu_de' => 'required|string|max:255',
+           
             'ghichu' => 'required|string',
+            'id_chuyen_de'=> 'required|string|max:255',
         ]);
         
         $userId = Auth::id();
@@ -123,15 +124,20 @@ class WizardController extends Controller
         if (!$userId) {
             return response()->json(['status' => 401,'error' => 'User not authenticated','id'=>$id_bai_viet], 401);
         }
-    
+       
         if ($id_bai_viet) {
             // Nếu id_bai_viet được truyền, tìm bài viết để cập nhật
             $baiViet = BaiViet::find($id_bai_viet);
             
-            if ($baiViet && $baiViet->user_id === $userId) { // Kiểm tra quyền sở hữu bài viết
+            if ($baiViet && $baiViet->user_id === $userId) { 
+                $chuyenDe = ChuyenDe::where('id_chuyen_de', $request->input('id_chuyen_de'))->first();
+                if (!$chuyenDe) {
+                    return response()->json(['status' => 401,'error' => 'Chuyên đề không phù hợp'], 401);
+                }
                 $baiViet->update([
-                    'chu_de' => $request->input('chu_de'),
+                  
                     'ghichu' => $request->input('ghichu'),
+                    'id_chuyen_de' => $chuyenDe->id_chuyen_de,
                 ]);
                 
                 // Cập nhật tiến trình
@@ -158,12 +164,16 @@ class WizardController extends Controller
                 return response()->json(['error' => 'Bài viết không tồn tại hoặc bạn không có quyền sửa bài viết này'], 403);
             }
         }
-    
+        $chuyenDe = ChuyenDe::where('id_chuyen_de', $request->input('id_chuyen_de'))->first();
+        if (!$chuyenDe) {
+            return response()->json(['status' => 401,'error' => 'Chuyên đề không phù hợp'], 401);
+        }
         // Nếu id_bai_viet không được truyền, tạo mới bài viết
         $baiViet = BaiViet::create([
-            'chu_de' => $request->input('chu_de'),
+           
             'ghichu' => $request->input('ghichu'),
-            'user_id' => $userId
+            'user_id' => $userId,
+            'id_chuyen_de'=>$request->input('id_chuyen_de')
         ]);
     
         // Tạo tiến trình mới

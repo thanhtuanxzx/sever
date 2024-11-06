@@ -27,6 +27,7 @@ class BaiViet extends Model
         'generated_name',
         'ghichu',
         'citations',
+        'id_chuyen_de',
     ];
 
     // Nếu bạn muốn tự động quản lý các timestamp
@@ -44,4 +45,9 @@ class BaiViet extends Model
     {
         return $this->hasMany(WizardProgress::class, 'bai_viet_id'); // Giả sử khóa ngoại trong bảng wizard_progress là bai_viet_id
     }
+    public function chuyenDe()
+    {
+        return $this->belongsTo(ChuyenDe::class, 'id_chuyen_de');
+    }
 }
+
