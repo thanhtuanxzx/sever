@@ -181,7 +181,11 @@ class UserController extends Controller
         }
 
         // Trả về thông tin người dùng
-        return response()->json($user, 200);
+        return response()->json([
+            'status' => 200,
+            'data' => $user
+        ], 200);
+        
     }
 
 }

@@ -91,6 +91,7 @@ class WizardController extends Controller
         // Trả về dữ liệu dưới dạng JSON
         return response()->json($baiViet);
     }
+
     
     public function show1()
     {
@@ -109,6 +110,52 @@ class WizardController extends Controller
     
         // Trả về dữ liệu dưới dạng JSON
         return response()->json($baiViet);
+    }
+    public function getChuyenDe(Request $request)
+    {
+        // Nếu có các query parameter, bạn có thể áp dụng chúng để lọc dữ liệu
+        $query = ChuyenDe::query();
+
+        // Kiểm tra các query parameters để lọc dữ liệu
+        if ($request->has('id_chuyen_de')) {
+            $query->where('id_chuyen_de', $request->input('id_chuyen_de'));
+        }
+
+       
+        // Trả về kết quả dưới dạng JSON
+        return response()->json($query->get());
+    }
+    public function getSubmissions(Request $request)
+    {
+        
+        // Lấy các tham số từ request
+        $idBaiViet = $request->query('id_bai_viet');
+        $idChuyenDe = $request->query('id_chuyen_de');
+        $tap = $request->query('tap');
+        // Tạo query builder để lọc dữ liệu
+        $query = BaiViet::query();
+
+        // Áp dụng các điều kiện lọc dựa vào các tham số
+        if ($idBaiViet) {
+            $query->where('id_bai_viet', $idBaiViet);
+        }
+
+        if ($idChuyenDe) {
+            $query->where('id_chuyen_de', $idChuyenDe);
+        }
+        if($tap){
+            $query->where('tap',$tap);
+        }
+
+        // Lấy kết quả sau khi áp dụng điều kiện
+        $baiViet = $query->get();
+
+        // Kiểm tra nếu không tìm thấy kết quả nào
+        if ($baiViet->isEmpty()) {
+            return response()->json(['message' => 'Không tìm thấy bài viết'], 404);
+        }
+
+        return response()->json($baiViet, 200);
     }
     
     public function storeStep1(Request $request ,$id_bai_viet=null)

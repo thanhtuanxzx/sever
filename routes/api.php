@@ -47,8 +47,9 @@ Route::post('/users/email', [WizardController::class, 'getUserByEmail'])->name('
 
 Route::get('/tac-gia/{id_bai_viet}', [WizardController::class, 'getAuthorIdByBaiVietId']);
 
-
+Route::get('/chuyen-de', [WizardController::class, 'getChuyenDe']);
 Route::middleware('auth:api')->group(function () {
+    
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
     Route::get('/messages', [ChatController::class, 'getMessages']);
     Route::put('/message/{id}', [ChatController::class, 'updateMessage']);  
@@ -57,6 +58,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/bai-viet', [WizardController::class, 'show']);
     Route::get('/bai-viet1', [WizardController::class, 'show1']);
     Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
+    Route::get('/submissions', [WizardController::class, 'getSubmissions']);
+
     // Các route khác cần xác thực  
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
     Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
