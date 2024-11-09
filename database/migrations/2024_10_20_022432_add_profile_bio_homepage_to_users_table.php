@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('profile_image')->nullable()->after('email'); // Cột hình ảnh đại diện
-            $table->text('bio')->nullable()->after('profile_image'); // Cột tiểu sử
+         
             $table->string('homepage_url')->nullable()->after('bio'); // Cột trang chủ URL
         });
     }
@@ -28,7 +28,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['profile_image', 'bio', 'homepage_url']);
+            $table->dropColumn(['profile_image', 'homepage_url']);
         });
     }
 };

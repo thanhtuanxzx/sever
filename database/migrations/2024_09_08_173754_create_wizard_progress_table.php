@@ -13,14 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('wizard_progress', function (Blueprint $table) {
+   
+        Schema::create('submission_progress', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade'); // Nếu bạn muốn liên kết với user
-            $table->unsignedBigInteger('bai_viet_id');
-            $table->foreign('bai_viet_id')->references('id_bai_viet')->on('bai_viet')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade'); // Liên kết với người dùng
+            $table->unsignedBigInteger('article_id'); // bai_viet_id -> article_id
+            $table->foreign('article_id')->references('article_id')->on('articles')->onDelete('cascade'); // bái_viet -> articles
             $table->integer('current_step')->default(1); // Lưu trữ bước hiện tại
             $table->timestamps();
         });
+
     }
 
     /**

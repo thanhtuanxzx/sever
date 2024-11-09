@@ -13,18 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tai_lieu_tham_khao', function (Blueprint $table) {
-            $table->id('id_tai_lieu_tham_khao');
-            $table->unsignedBigInteger('id_bai_viet');
-            $table->foreign('id_bai_viet')->references('id_bai_viet')->on('bai_viet')->onDelete('cascade');
-            $table->text('thong_tin_tai_lieu');
+        Schema::create('references', function (Blueprint $table) {
+            $table->id('reference_id');                // id_tai_lieu_tham_khao -> reference_id
+            $table->unsignedBigInteger('article_id');  // id_bai_viet -> article_id
+            $table->foreign('article_id')->references('article_id')->on('articles')->onDelete('cascade');
+            $table->text('reference_info');            // thong_tin_tai_lieu -> reference_info
 
-            
-            $table->string('dinh_dang_trich_dan')->nullable();
-            $table->text('trich_dan')->nullable();
+            $table->string('citation_format')->nullable(); // dinh_dang_trich_dan -> citation_format
+            $table->text('citation')->nullable();      // trich_dan -> citation
             $table->timestamps();
         });
-        
     }
 
     /**
@@ -34,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tai_lieu_tham_khao');
+        Schema::dropIfExists('references');
     }
 };

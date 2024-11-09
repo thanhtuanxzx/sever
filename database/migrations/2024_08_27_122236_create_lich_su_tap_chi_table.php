@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('lich_su_tap_chi', function (Blueprint $table) {
-            $table->id('id_lich_su_tap_chi');
-            $table->unsignedBigInteger('id_tap_chi');
-            $table->foreign('id_tap_chi')->references('id_tap_chi')->on('tap_chi')->onDelete('cascade');
-            $table->date('ngay_sua_doi');
-            $table->text('noi_dung_sua_doi');
+        Schema::create('journal_history', function (Blueprint $table) {
+            $table->id('journal_history_id');          // id_lich_su_tap_chi -> journal_history_id
+            $table->unsignedBigInteger('journal_id');  // id_tap_chi -> journal_id
+            $table->foreign('journal_id')->references('journal_id')->on('journals')->onDelete('cascade');
+            $table->date('modification_date');         // ngay_sua_doi -> modification_date
+            $table->text('modification_content');      // noi_dung_sua_doi -> modification_content
             $table->timestamps();
         });
         
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('lich_su_tap_chi');
+        Schema::dropIfExists('journal_history');
     }
 };

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User; // Thêm dòng này nếu User ở thư mục Models
-use App\Models\BaiViet;
-use App\Models\TuKhoa;
+use App\Models\Article;
+use App\Models\Keyword;
 use App\Models\Citation;
-use App\Models\TacGiaBaiViet;
-use App\Models\WizardProgress;
+use App\Models\ArticleAuthor;
+use App\Models\SubmissionProgress;
 use App\Models\File;
-use App\Models\ChuyenDe;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -19,25 +19,25 @@ use Illuminate\Support\Facades\Storage;
 class WizardController extends Controller
    
 {
-    public function getAuthorIdByBaiVietId($idBaiViet)
+    public function getAuthorIdByBaiVietId($idArticle)
     {
-        // Lấy tất cả bản ghi từ bảng tac_gia_bai_viet có id_bai_viet tương ứng
-        $tacGiaBaiViets = TacGiaBaiViet::where('id_bai_viet', $idBaiViet)->with('user')->get();
+        // Lấy tất cả bản ghi từ bảng tac_gia_bai_viet có article_id tương ứng
+        $articleauthor = ArticleAuthor::where('article_id', $idArticle)->with('user')->get();
         
         // Kiểm tra nếu có tác giả
-        if ($tacGiaBaiViets->isEmpty()) {
+        if ($articleauthor->isEmpty()) {
             return response()->json(['status' => 404,'error' => 'Không có tác giả nào cho bài viết này'], 404);
         }
     
         // Tạo mảng chứa kết quả với thông tin chi tiết của từng tác giả
         $result = [];
-        foreach ($tacGiaBaiViets as $coAuthor) {
+        foreach ($articleauthor as $coAuthor) {
             if ($coAuthor->user) {  // Kiểm tra mối quan hệ user có tồn tại
                 $result[] = [
                     'first_name' => $coAuthor->user->first_name,
                     'last_name' => $coAuthor->user->last_name,
                     'email' => $coAuthor->user->email,
-                    'vai_tro' => $coAuthor->vai_tro,  // Lấy vai trò từ bản ghi tac_gia_bai_viet
+                    'role' => $coAuthor->role,  // Lấy vai trò từ bản ghi tac_gia_bai_viet
                 ];
             }
         }
@@ -54,15 +54,14 @@ class WizardController extends Controller
 
     public function getUserByEmail(Request $request)
     {
-        
         // Xác thực email
         $request->validate([
             'email' => 'required|email',
         ]);
-
+    
         // Tìm người dùng theo email
         $user = User::where('email', $request->email)->first();
-
+    
         // Nếu tìm thấy, trả về thông tin
         if ($user) {
             return response()->json([
@@ -70,9 +69,11 @@ class WizardController extends Controller
                 'last_name' => $user->last_name,
             ]);
         } else {
-            return response()->json(['status' => 404,'error' => 'User not found.'], 404);
+            // Nếu không tìm thấy, trả về lỗi
+            return response()->json(['status' => 404, 'error' => 'User not found.'], 404);
         }
     }
+    
     public function show()
     {  
         $userId = Auth::id(); // Lấy ID người dùng đã xác thực
@@ -83,13 +84,13 @@ class WizardController extends Controller
         }
     
         // Lấy danh sách bài viết với current_step < 5 của người dùng hiện tại
-        $baiViet = BaiViet::where('user_id', $userId) // Lọc theo user_id
-            ->whereHas('wizardProgress', function ($query) {
+       $article = Article::where('user_id', $userId) // Lọc theo user_id
+            ->whereHas('SubmissionProgress', function ($query) {
                 $query->where('current_step', '<', 5); // Chỉ lấy current_step < 5
             })->get();
     
         // Trả về dữ liệu dưới dạng JSON
-        return response()->json($baiViet);
+        return response()->json($article);
     }
 
     
@@ -103,22 +104,47 @@ class WizardController extends Controller
         }
     
         // Lấy danh sách bài viết với current_step = 4 của người dùng hiện tại
-        $baiViet = BaiViet::where('user_id', $userId) // Lọc theo user_id
-            ->whereHas('wizardProgress', function ($query) {
+       $article = Article::where('user_id', $userId) // Lọc theo user_id
+            ->whereHas('SubmissionProgress', function ($query) {
                 $query->where('current_step', '=', 4); 
             })->get();
     
         // Trả về dữ liệu dưới dạng JSON
-        return response()->json($baiViet);
+        return response()->json($article);
     }
-    public function getChuyenDe(Request $request)
+    public function getTukhoa($article_id, Request $request) {
+        // Lọc theo article_id
+        $query = Keyword::where('article_id', $article_id);
+    
+        // Kiểm tra nếu có tham số keyword_id trong query parameters
+        if ($request->has('keyword_id')) { // Sửa lại keywork_id thành keyword_id nếu cần
+            $keyword_id = $request->query('keyword_id');
+            $query->where('keyword_id', $keyword_id); // Assuming `id` is the correct column for keyword_id
+        }
+    
+        // Lấy kết quả từ database
+        $keywords = $query->get();
+    
+        // Kiểm tra nếu không có kết quả nào
+        if ($keywords->isEmpty()) {
+            return response()->json(['status' => 404, 'message' => 'Không tìm thấy từ khóa nào'], 404);
+        }
+    
+        // Trả về dữ liệu dưới dạng JSON
+        return response()->json([
+            'status' => 200,
+            'data' => $keywords
+        ], 200);
+    }
+    
+    public function getCategory(Request $request)
     {
         // Nếu có các query parameter, bạn có thể áp dụng chúng để lọc dữ liệu
-        $query = ChuyenDe::query();
+        $query = Category::query();
 
         // Kiểm tra các query parameters để lọc dữ liệu
-        if ($request->has('id_chuyen_de')) {
-            $query->where('id_chuyen_de', $request->input('id_chuyen_de'));
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
         }
 
        
@@ -129,115 +155,99 @@ class WizardController extends Controller
     {
         
         // Lấy các tham số từ request
-        $idBaiViet = $request->query('id_bai_viet');
-        $idChuyenDe = $request->query('id_chuyen_de');
-        $tap = $request->query('tap');
+        $idArticle = $request->query('article_id');
+        $idCategory = $request->query('category_id');
+        $volume = $request->query('volume');
         // Tạo query builder để lọc dữ liệu
-        $query = BaiViet::query();
+        $query = Article::query();
 
         // Áp dụng các điều kiện lọc dựa vào các tham số
-        if ($idBaiViet) {
-            $query->where('id_bai_viet', $idBaiViet);
+        if ($idArticle) {
+            $query->where('article_id', $idArticle);
         }
 
-        if ($idChuyenDe) {
-            $query->where('id_chuyen_de', $idChuyenDe);
+        if ($idCategory) {
+            $query->where('category_id', $idCategory);
         }
-        if($tap){
-            $query->where('tap',$tap);
+        if($volume){
+            $query->where('volume',$volume);
         }
 
         // Lấy kết quả sau khi áp dụng điều kiện
-        $baiViet = $query->get();
+       $article = $query->get();
 
         // Kiểm tra nếu không tìm thấy kết quả nào
-        if ($baiViet->isEmpty()) {
+        if ($article->isEmpty()) {
             return response()->json(['message' => 'Không tìm thấy bài viết'], 404);
         }
 
-        return response()->json($baiViet, 200);
+        return response()->json($article, 200);
     }
     
-    public function storeStep1(Request $request ,$id_bai_viet=null)
+    public function storeStep1(Request $request, $article_id = null)
     {
         $request->validate([
-           
-            'ghichu' => 'required|string',
-            'id_chuyen_de'=> 'required|string|max:255',
+            'note' => 'required|string',
+            'category_id' => 'required|string|max:255',
         ]);
-        
+    
         $userId = Auth::id();
     
         if (!$userId) {
-            return response()->json(['status' => 401,'error' => 'User not authenticated','id'=>$id_bai_viet], 401);
+            return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
         }
-       
-        if ($id_bai_viet) {
-            // Nếu id_bai_viet được truyền, tìm bài viết để cập nhật
-            $baiViet = BaiViet::find($id_bai_viet);
-            
-            if ($baiViet && $baiViet->user_id === $userId) { 
-                $chuyenDe = ChuyenDe::where('id_chuyen_de', $request->input('id_chuyen_de'))->first();
-                if (!$chuyenDe) {
-                    return response()->json(['status' => 401,'error' => 'Chuyên đề không phù hợp'], 401);
-                }
-                $baiViet->update([
-                  
-                    'ghichu' => $request->input('ghichu'),
-                    'id_chuyen_de' => $chuyenDe->id_chuyen_de,
+    
+        $category = Category::where('category_id', $request->input('category_id'))->first();
+        if (!$category) {
+            return response()->json(['status' => 401, 'error' => 'Chuyên đề không phù hợp'], 401);
+        }
+    
+        if ($article_id) {
+            $article = Article::find($article_id);
+    
+            if ($article && $article->user_id === $userId) {
+                $article->update([
+                    'note' => $request->input('note'),
+                    'category_id' => $category->category_id,
                 ]);
-                
-                // Cập nhật tiến trình
-                $progress = WizardProgress::where('user_id', $userId)
-                    ->where('bai_viet_id', $baiViet->id_bai_viet)
-                    ->first();
-                    
-                if ($progress) {
-                    $progress->update(['current_step' => 1]);
-                } else {
-                    WizardProgress::create([
-                        'user_id' => $userId,
-                        'bai_viet_id' => $baiViet->id_bai_viet,
-                        'current_step' => 1
-                    ]);
-                }
+    
+                SubmissionProgress::updateOrCreate(
+                    ['user_id' => $userId, 'article_id' => $article->article_id],
+                    ['current_step' => 1]
+                );
     
                 return response()->json([
                     'status' => 200,
                     'message' => 'Bài viết đã được cập nhật thành công',
-                    'bai_viet_id' => $baiViet->id_bai_viet
+                    'article_id' => $article->article_id
                 ], 200);
-            } else {
-                return response()->json(['error' => 'Bài viết không tồn tại hoặc bạn không có quyền sửa bài viết này'], 403);
             }
+    
+            return response()->json(['error' => 'Bài viết không tồn tại hoặc bạn không có quyền sửa bài viết này'], 403);
         }
-        $chuyenDe = ChuyenDe::where('id_chuyen_de', $request->input('id_chuyen_de'))->first();
-        if (!$chuyenDe) {
-            return response()->json(['status' => 401,'error' => 'Chuyên đề không phù hợp'], 401);
-        }
-        // Nếu id_bai_viet không được truyền, tạo mới bài viết
-        $baiViet = BaiViet::create([
-           
-            'ghichu' => $request->input('ghichu'),
+    
+        $article = Article::create([
+            'note' => $request->input('note'),
             'user_id' => $userId,
-            'id_chuyen_de'=>$request->input('id_chuyen_de')
+            'category_id' => $category->category_id,
         ]);
     
-        // Tạo tiến trình mới
-        WizardProgress::create([
+        SubmissionProgress::create([
             'user_id' => $userId,
-            'bai_viet_id' => $baiViet->id_bai_viet,
+            'article_id' => $article->article_id,
             'current_step' => 1
         ]);
     
         return response()->json([
+            'status' => 201,
             'message' => 'Bước 1 đã lưu thành công',
-            'bai_viet_id' => $baiViet->id_bai_viet
+            'article_id' => $article->article_id
         ], 201);
     }
     
+    
 
-    // public function storeStep2(Request $request, $id_bai_viet = null)
+    // public function storeStep2(Request $request, $article_id = null)
     // {
     //     $userId = Auth::id();
 
@@ -246,18 +256,18 @@ class WizardController extends Controller
     //     }
 
     //     // Lấy tiến trình của người dùng
-    //     $progress = WizardProgress::where('user_id', $userId)
-    //         ->where('bai_viet_id', $id_bai_viet)
+    //     $progress = SubmissionProgress::where('user_id', $userId)
+    //         ->where('article_id', $article_id)
     //         ->first();
     
     //     if (!$progress) {
     //         return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
     //     }
     
-    //     // Lấy bài viết dựa trên id_bai_viet
-    //     $baiViet = BaiViet::find($id_bai_viet);
+    //     // Lấy bài viết dựa trên article_id
+    //    $article = Article::find($article_id);
     
-    //     if (!$baiViet || $baiViet->user_id !== $userId) {
+    //     if (!$article ||$article->user_id !== $userId) {
     //         return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
     //     }
 
@@ -273,8 +283,8 @@ class WizardController extends Controller
     //         $file = $request->file('file');
     
     //         // Xóa file cũ nếu tồn tại
-    //         if ($baiViet->generated_name) {
-    //             Storage::disk('public')->delete('uploads/' . $baiViet->generated_name);
+    //         if ($article->generated_name) {
+    //             Storage::disk('public')->delete('uploads/' .$article->generated_name);
     //         }
     
     //         // Tạo tên file mới và lưu trữ file
@@ -282,7 +292,7 @@ class WizardController extends Controller
     //         $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
     
     //         // Cập nhật thông tin file vào bài viết
-    //         $baiViet->update([
+    //        $article->update([
     //             'original_name' => $file->getClientOriginalName(),
     //             'generated_name' => $generatedFileName,
     //         ]);
@@ -293,7 +303,7 @@ class WizardController extends Controller
     //     return response()->json(['status' => 200,'message' => 'Không có file nào được tải lên'], 200);
     // }
 
-    public function storeStep2(Request $request, $baiVietId = null)
+    public function storeStep2(Request $request,$articleId = null)
     {
         $userId = Auth::id();
     
@@ -301,12 +311,14 @@ class WizardController extends Controller
         if (!$userId) {
             return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
         }
-    
+        
         // Tìm bài viết
-        $baiViet = BaiViet::find($baiVietId);
+        
+        $article = Article::find($articleId); // Correct usage
+
     
         // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
-        if (!$baiViet || $baiViet->user_id !== $userId) {
+        if (!$article ||$article->user_id !== $userId) {
             return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
         }
     
@@ -318,7 +330,7 @@ class WizardController extends Controller
         // Nếu có file mới được tải lên
         if ($request->hasFile('file')) {
             // Lấy tất cả file cũ
-            $oldFiles = File::where('id_bai_viet', $baiVietId)->get();
+            $oldFiles = File::where('article_id',$articleId)->get();
     
             // Xóa tất cả file cũ
             foreach ($oldFiles as $oldFile) {
@@ -330,7 +342,7 @@ class WizardController extends Controller
                 }
     
                 // Xóa bản ghi trong cơ sở dữ liệu
-               File::where('id_bai_viet', $baiVietId)->delete();
+               File::where('article_id',$articleId)->delete();
             }
     
             // Lưu file mới
@@ -348,7 +360,7 @@ class WizardController extends Controller
     
                 // Tạo hoặc cập nhật thông tin file trong cơ sở dữ liệu
                 File::updateOrCreate(
-                    ['id_bai_viet' => $baiVietId, 'generated_name' => $generatedFileName],
+                    ['article_id' =>$articleId, 'generated_name' => $generatedFileName],
                     [
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $filePath,
@@ -376,7 +388,7 @@ class WizardController extends Controller
     
 
 
-    public function storeStep3(Request $request, $id_bai_viet = null)
+    public function storeStep3(Request $request, $article_id = null)
     {
         $userId = Auth::id();
     
@@ -385,9 +397,9 @@ class WizardController extends Controller
         }
     
         $request->validate([
-            'tieu_de' => 'required|string|max:255',
-            'tom_tat' => 'nullable|string|max:250',
-            'tu_khoa' => 'nullable|string',
+            'title' => 'required|string|max:255',
+            'abstract' => 'nullable|string|max:250',
+            'keyword' => 'nullable|string',
             'citations' => 'string',
         
             'coAuthors' => 'nullable|array',
@@ -397,41 +409,42 @@ class WizardController extends Controller
         ]);
     
         // Lấy tiến trình của người dùng
-        $progress = WizardProgress::where('user_id', $userId)
-            ->where('bai_viet_id', $id_bai_viet)
+        $progress = SubmissionProgress::where('user_id', $userId)
+            ->where('article_id', $article_id)
             ->first();
     
         if (!$progress) {
             return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
         }
     
-        // Lấy bài viết dựa trên id_bai_viet
-        $baiViet = BaiViet::find($id_bai_viet);
+        // Lấy bài viết dựa trên article_id
+       $article = Article::find($article_id);
     
-        if (!$baiViet || $baiViet->user_id !== $userId) {
+        if (!$article ||$article->user_id !== $userId) {
             return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
         }
     
         // Cập nhật thông tin bài viết
-        $baiViet->update([
-            'tieu_de' => $request->input('tieu_de'),
-            'tom_tat' => $request->input('tom_tat'),
+       $article->update([
+            'title' => $request->input('title'),
+            'abstract' => $request->input('abstract'),
             'citations'=>$request->input('citations'),
         ]);
     
         // Xử lý từ khóa
-        if ($request->filled('tu_khoa')) {
-            $tuKhoa = preg_split('/\r\n|\r|\n/', $request->input('tu_khoa'));
-            foreach ($tuKhoa as $keyword) {
-                $keyword = trim($keyword);
-                if (!empty($keyword)) {
-                    TuKhoa::create([
-                        'id_bai_viet' => $baiViet->id_bai_viet,
-                        'tu_khoa' => $keyword
+        if ($request->filled('keyword')) {
+            $keywords = preg_split('/\r\n|\r|\n/', $request->input('keyword')); // Tách từ khóa vào mảng
+            foreach ($keywords as $keyword) { // Dùng biến đúng tên là $keywords
+                $keyword = trim($keyword); // Loại bỏ khoảng trắng thừa
+                if (!empty($keyword)) { // Kiểm tra nếu từ khóa không rỗng
+                    Keyword::create([ // Tạo mới bản ghi từ khóa
+                        'article_id' => $article->article_id,
+                        'keyword' => $keyword
                     ]);
                 }
             }
         }
+        
     
        // Xử lý đồng tác giả
     if ($request->has('coAuthors')) {
@@ -440,15 +453,15 @@ class WizardController extends Controller
 
             if ($user) {
                 // Kiểm tra xem đồng tác giả đã tồn tại hay chưa
-                $existingCoAuthor = TacGiaBaiViet::where('id_tac_gia', $user->id)
-                    ->where('id_bai_viet', $baiViet->id_bai_viet)
+                $existingCoAuthor = ArticleAuthor::where('author_id', $user->id)
+                    ->where('article_id',$article->article_id)
                     ->first();
 
                 if (!$existingCoAuthor) {
-                    TacGiaBaiViet::create([
-                        'id_tac_gia' => $user->id,
-                        'id_bai_viet' => $baiViet->id_bai_viet,
-                        'vai_tro' => $coAuthor['role'],
+                    ArticleAuthor::create([
+                        'author_id' => $user->id,
+                        'article_id' =>$article->article_id,
+                        'role' => $coAuthor['role'],
                     ]);
                 } else {
                     return response()->json(['status' => 200,'message' => "Đồng tác giả với email: {$coAuthor['email']} đã tồn tại"], 200);
@@ -468,7 +481,7 @@ class WizardController extends Controller
     }
     
 
-    public function storeStep4(Request $request, $id_bai_viet = null)
+    public function storeStep4(Request $request, $article_id = null)
     {
         $userId = Auth::id();
 
@@ -477,18 +490,18 @@ class WizardController extends Controller
         }
 
         // Lấy tiến trình của người dùng
-        $progress = WizardProgress::where('user_id', $userId)
-            ->where('bai_viet_id', $id_bai_viet)
+        $progress = SubmissionProgress::where('user_id', $userId)
+            ->where('article_id', $article_id)
             ->first();
     
         if (!$progress) {
             return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
         }
     
-        // Lấy bài viết dựa trên id_bai_viet
-        $baiViet = BaiViet::find($id_bai_viet);
+        // Lấy bài viết dựa trên article_id
+       $article = Article::find($article_id);
     
-        if (!$baiViet || $baiViet->user_id !== $userId) {
+        if (!$article ||$article->user_id !== $userId) {
             return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
         }
 
@@ -497,7 +510,7 @@ class WizardController extends Controller
         return response()->json(['status' => 200,'message' => 'Bước 4 đã lưu thành công'], 200);
     }
 
-    // public function storeStep5(Request $request, $id_bai_viet = null)
+    // public function storeStep5(Request $request, $article_id = null)
     // {
     //     $userId = Auth::id();
 
@@ -506,18 +519,18 @@ class WizardController extends Controller
     //     }
 
     //      // Lấy tiến trình của người dùng
-    //      $progress = WizardProgress::where('user_id', $userId)
-    //      ->where('bai_viet_id', $id_bai_viet)
+    //      $progress = SubmissionProgress::where('user_id', $userId)
+    //      ->where('article_id', $article_id)
     //      ->first();
     
     //     if (!$progress) {
     //         return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
     //     }
     
-    //     // Lấy bài viết dựa trên id_bai_viet
-    //     $baiViet = BaiViet::find($id_bai_viet);
+    //     // Lấy bài viết dựa trên article_id
+    //    $article = Article::find($article_id);
     
-    //     if (!$baiViet || $baiViet->user_id !== $userId) {
+    //     if (!$Article ||$article->user_id !== $userId) {
     //         return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
     //     }
 

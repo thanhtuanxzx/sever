@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('citations', function (Blueprint $table) {
-            $table->unsignedBigInteger('id_bai_viet')->after('link'); // Thêm cột id_bai_viet
+            $table->unsignedBigInteger('article_id')->after('link'); // Add article_id column
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('citations', function (Blueprint $table) {
-            $table->dropColumn('id_bai_viet'); // Xóa cột id_bai_viet
+            $table->dropColumn('article_id'); // Drop article_id column
         });
     }
 };

@@ -13,21 +13,22 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('chuyen_de', function (Blueprint $table) {
-            $table->id('id_chuyen_de')->unsignedBigInteger();
-            $table->string('ten_chuyen_de')->nullable();
-            $table->text('mo_ta')->nullable();
-            $table->timestamps();
+        // Create the 'categories' table (formerly 'chuyen_de')
+        Schema::create('categories', function (Blueprint $table) {
+            $table->id('category_id'); // Primary key column
+            $table->string('name')->nullable(); // 'ten_chuyen_de' -> 'name'
+            $table->text('description')->nullable(); // 'mo_ta' -> 'description'
+            $table->timestamps(); // Timestamps for created_at and updated_at
         });
 
-        // Cập nhật bảng bài viết để thêm khóa ngoại liên kết với bảng chuyên đề
-        Schema::table('bai_viet', function (Blueprint $table) {
-            // Thêm cột id_chuyen_de để lưu khóa ngoại
-            $table->unsignedBigInteger('id_chuyen_de')->nullable();
+        // Update the 'articles' table (formerly 'bai_viet') to add foreign key referencing the 'categories' table
+        Schema::table('articles', function (Blueprint $table) {
+            // Add 'category_id' column to store the foreign key
+            $table->unsignedBigInteger('category_id')->nullable();
 
-            // Thiết lập khóa ngoại từ bai_viet đến chuyen_de
-            $table->foreign('id_chuyen_de')->references('id_chuyen_de')->on('chuyen_de')
-                  ->onDelete('set null'); // Khi chuyên đề bị xóa, cột id_chuyen_de sẽ là null
+            // Set the foreign key relationship from 'articles' to 'categories'
+            $table->foreign('category_id')->references('category_id')->on('categories')
+                  ->onDelete('set null'); // If the category is deleted, the 'category_id' will be set to null
         });
     }
 
@@ -38,12 +39,13 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
-            $table->dropForeign(['id_chuyen_de']);
-            $table->dropColumn('id_chuyen_de');
+        // Drop the foreign key constraint and 'category_id' column from the 'articles' table
+        Schema::table('articles', function (Blueprint $table) {
+            $table->dropForeign(['category_id']);
+            $table->dropColumn('category_id');
         });
 
-        // Xóa bảng chuyên đề
-        Schema::dropIfExists('chuyen_de');
+        // Drop the 'categories' table
+        Schema::dropIfExists('categories');
     }
 };

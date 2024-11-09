@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
-            $table->text('citations')->nullable(); // Hoặc $table->string('citations')->nullable();
+        Schema::table('articles', function (Blueprint $table) {
+            $table->text('citations')->nullable(); // Or $table->string('citations')->nullable();
         });
     }
 
@@ -25,8 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
-            //
+        Schema::table('articles', function (Blueprint $table) {
+            $table->dropColumn('citations');
         });
     }
 };

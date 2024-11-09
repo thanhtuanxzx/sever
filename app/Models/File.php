@@ -9,21 +9,20 @@ class File extends Model
 {
     use HasFactory;
 
-    // Đặt tên bảng nếu không phải theo quy ước
     protected $table = 'file';
 
-    // Đặt các trường có thể gán đại diện cho các thuộc tính của bảng
+    protected $primaryKey = 'file_id';
+
     protected $fillable = [
-        'id_bai_viet',
+        'article_id',
         'file_name',
         'file_path',
         'file_mime_type',
-        'generated_name', 
+        'generated_name'
     ];
 
-    // Định nghĩa quan hệ với bảng bai_viet
-    public function baiViet()
+    public function article()
     {
-        return $this->belongsTo(BaiViet::class, 'id_bai_viet');
+        return $this->belongsTo(Article::class, 'article_id');
     }
 }

@@ -13,11 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
-            $table->unsignedBigInteger('user_id')->after('id_bai_viet')->nullable();
-            // Nếu cần tạo ràng buộc khóa ngoại, bạn có thể thêm:
+        Schema::table('articles', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id')->after('article_id')->nullable();
+            // If you need to add a foreign key constraint, you can uncomment the line below:
             // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
+   
     }
 
     /**
@@ -27,7 +28,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
+        Schema::table('articles', function (Blueprint $table) {
             $table->dropColumn('user_id');
         });
     }

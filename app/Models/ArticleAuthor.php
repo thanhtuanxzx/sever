@@ -5,22 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Citation extends Model
+class ArticleAuthor extends Model
 {
     use HasFactory;
 
-    protected $table = 'citations';
+    protected $table = 'article_authors';
 
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'title',
-        'link',
-        'article_id'
+        'article_id',
+        'author_id',
+        'role'
     ];
 
-    public function article()
+    public function user()
     {
-        return $this->belongsTo(Article::class, 'article_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

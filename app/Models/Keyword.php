@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Citation extends Model
+class Keyword extends Model
 {
     use HasFactory;
 
-    protected $table = 'citations';
+    protected $table = 'keywords';
 
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'keyword_id';
 
     protected $fillable = [
-        'title',
-        'link',
+        'keyword',
         'article_id'
     ];
 

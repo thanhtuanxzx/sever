@@ -22,8 +22,8 @@ class UserController extends Controller
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'chucdanh' => 'nullable|string|max:255',
-            'gioitinh' => 'nullable|string|max:10',
+            'title' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|max:10',
         ]);
 
         $user->update($validatedData);
@@ -54,7 +54,7 @@ class UserController extends Controller
         // Xác thực dữ liệu đầu vào
         $validatedData = $request->validate([
             // 'quyen' => 'required|boolean',
-            'linhvucnc' => 'required|string|max:255',
+            'research_field' => 'required|string|max:255',
         ]);
 
         $user->update($validatedData);

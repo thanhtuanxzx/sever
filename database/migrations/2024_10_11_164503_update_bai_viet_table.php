@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
-            // Xóa các cột không cần thiết
+        Schema::table('articles', function (Blueprint $table) {
+            // Drop unnecessary columns
             $table->dropColumn(['file_name', 'file_path', 'file_mime_type']);
 
-            // Thêm các cột mới
-            $table->string('original_name')->nullable();  // Cột original_name
-            $table->string('generated_name')->nullable(); // Cột generated_name
+            // Add new columns
+            $table->string('original_name')->nullable();  // original_name column
+            $table->string('generated_name')->nullable(); // generated_name column
         });
     }
 
@@ -30,13 +30,13 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('bai_viet', function (Blueprint $table) {
-            // Thêm lại các cột đã xóa
+        Schema::table('articles', function (Blueprint $table) {
+            // Add back the dropped columns
             $table->string('file_name')->nullable();  
             $table->string('file_path')->nullable();  
             $table->string('file_mime_type')->nullable();
 
-            // Xóa các cột mới
+            // Drop the new columns
             $table->dropColumn('original_name');  
             $table->dropColumn('generated_name'); 
         });

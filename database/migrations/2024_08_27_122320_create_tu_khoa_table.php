@@ -13,14 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tu_khoa', function (Blueprint $table) {
-            $table->id('id_tu_khoa');
-            $table->string('tu_khoa');
-            $table->unsignedBigInteger('id_bai_viet');
-            $table->foreign('id_bai_viet')->references('id_bai_viet')->on('bai_viet')->onDelete('cascade');
+        Schema::create('keywords', function (Blueprint $table) {
+            $table->id('keyword_id');                  // id_tu_khoa -> keyword_id
+            $table->string('keyword');                 // tu_khoa -> keyword
+            $table->unsignedBigInteger('article_id');  // id_bai_viet -> article_id
+            $table->foreign('article_id')->references('article_id')->on('articles')->onDelete('cascade');
             $table->timestamps();
         });
-        
     }
 
     /**
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tu_khoa');
+        Schema::dropIfExists('keywords');
     }
 };

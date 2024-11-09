@@ -13,23 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('phan_bien', function (Blueprint $table) {
-            // $table->id('id_phan_bien');
-            // $table->foreignId('id_bai_viet')->constrained('bai_viet')->onDelete('cascade');
-            // $table->foreignId('id_nguoi_phan_bien')->constrained('users')->onDelete('cascade');
-            $table->id('id_phan_bien');
-            $table->unsignedBigInteger('id_bai_viet');
-            $table->foreign('id_bai_viet')->references('id_bai_viet')->on('bai_viet')->onDelete('cascade');
-            $table->unsignedBigInteger('id_nguoi_phan_bien');
-            $table->date('ngay_gui');
-            $table->date('ngay_chap_nhan')->nullable();
-            $table->text('danh_gia');
-            $table->text('yeu_cau_chinh_sua')->nullable();
-            $table->text('ghi_chu')->nullable();
-            $table->enum('trang_thai', ['Chờ phản biện', 'Đã phản biện', 'Từ chối'])->default('Chờ phản biện');
+        Schema::create('reviews', function (Blueprint $table) {
+         
+            $table->id('review_id');                    // id_phan_bien -> review_id
+            $table->unsignedBigInteger('article_id');   // id_bai_viet -> article_id
+            $table->foreign('article_id')->references('article_id')->on('articles')->onDelete('cascade');
+            $table->unsignedBigInteger('reviewer_id');  // id_nguoi_phan_bien -> reviewer_id
+            $table->date('submission_date');            // ngay_gui -> submission_date
+            $table->date('acceptance_date')->nullable(); // ngay_chap_nhan -> acceptance_date
+            $table->text('evaluation');                 // danh_gia -> evaluation
+            $table->text('revision_requirements')->nullable(); // yeu_cau_chinh_sua -> revision_requirements
+            $table->text('notes')->nullable();          // ghi_chu -> notes
+            $table->enum('status', ['Pending review', 'Reviewed', 'Rejected'])->default('Pending review'); // trang_thai -> status
             $table->timestamps();
         });
-        
     }
 
     /**
@@ -39,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('phan_bien');
+        Schema::dropIfExists('reviews');
     }
 };

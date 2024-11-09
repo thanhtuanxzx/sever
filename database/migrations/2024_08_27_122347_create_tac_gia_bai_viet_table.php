@@ -13,16 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tac_gia_bai_viet', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('id_bai_viet');  // Đảm bảo kiểu dữ liệu khớp với cột trong bảng 'bai_viet'
-            $table->unsignedBigInteger('id_tac_gia');
-            $table->string('vai_tro');
-            $table->foreign('id_bai_viet')->references('id_bai_viet')->on('bai_viet')->onDelete('cascade');
-            $table->foreign('id_tac_gia')->references('id')->on('users')->onDelete('cascade');
+   
+  
+        Schema::create('article_authors', function (Blueprint $table) {
+            $table->id('id');                          // id
+            $table->unsignedBigInteger('article_id');  // id_bai_viet -> article_id
+            $table->unsignedBigInteger('author_id');   // id_tac_gia -> author_id
+            $table->string('role');                    // vai_tro -> role
+            $table->foreign('article_id')->references('article_id')->on('articles')->onDelete('cascade'); // bái_viet -> articles
+            $table->foreign('author_id')->references('id')->on('users')->onDelete('cascade'); // tac_gia -> users
             $table->timestamps();
         });
-        
+     
     }
 
     /**
@@ -32,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tac_gia_bai_viet');
+        Schema::dropIfExists('article_authors');
     }
 };

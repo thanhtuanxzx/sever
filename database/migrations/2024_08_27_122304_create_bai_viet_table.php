@@ -13,30 +13,26 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('bai_viet', function (Blueprint $table) {
-            $table->id('id_bai_viet')->unsignedBigInteger();
-            $table->string('chu_de')->nullable();
-            $table->string('ghichu')->nullable();
+        Schema::create('articles', function (Blueprint $table) {
+            $table->id('article_id')->unsignedBigInteger();    // id_bai_viet -> article_id
+            $table->string('topic')->nullable();               // chu_de -> topic
+            $table->string('note')->nullable();                // ghichu -> note
 
             $table->string('file_name')->nullable();
             $table->string('file_path')->nullable();
             $table->string('file_mime_type')->nullable();
 
-            $table->string('tieu_de')->nullable();
-            $table->text('tom_tat')->nullable();
-            $table->longText('noi_dung')->nullable();
+            $table->string('title')->nullable();               // tieu_de -> title
+            $table->text('abstract')->nullable();              // tom_tat -> abstract
+            $table->longText('content')->nullable();           // noi_dung -> content
             
-            $table->date('ngay_gui')->nullable();
-            $table->date('ngay_chap_nhan')->nullable();
-            $table->enum('trang_thai', ['Chờ duyệt', 'Đã duyệt', 'Từ chối'])->default('Chờ duyệt');
-            $table->string('tap')->nullable();
+            $table->date('submission_date')->nullable();       // ngay_gui -> submission_date
+            $table->date('acceptance_date')->nullable();       // ngay_chap_nhan -> acceptance_date
+            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending'); // trang_thai -> status
+            $table->string('volume')->nullable();              // tap -> volume
           
-            
             $table->timestamps();
-
-            
         });
-        
     }
 
     /**
@@ -46,6 +42,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('bai_viet');
+        Schema::dropIfExists('articles');
     }
 };

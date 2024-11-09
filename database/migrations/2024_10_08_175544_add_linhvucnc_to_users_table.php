@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('linhvucnc')->nullable(); // Thêm cột linhvucnc, có thể null
+            $table->string('research_field')->nullable(); // Add the research_field column, can be null
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('linhvucnc'); // Xóa cột linhvucnc trong trường hợp rollback
+            $table->dropColumn('research_field'); // Drop the research_field column in case of rollback
         });
     }
 };
