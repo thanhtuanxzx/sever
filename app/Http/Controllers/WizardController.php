@@ -169,69 +169,104 @@ class WizardController extends Controller
         return response()->json($query->get());
     }
     public function getSubmissions(Request $request)
+    
     {
         
-        // Lấy các tham số từ request
-        $idArticle = $request->query('article_id');
-        $idCategory = $request->query('category_id');
-        $volume = $request->query('volume');
-        // Tạo query builder để lọc dữ liệu
-        $query = Article::query();
+{
+        
+    // Lấy các tham số từ request
+    $idArticle = $request->query('article_id');
+    $idCategory = $request->query('category_id');
+    $volume = $request->query('volume');
+    
+    // Tạo query builder để lọc dữ liệu
+    $query = Article::query();
 
-        // Áp dụng các điều kiện lọc dựa vào các tham số
-        if ($idArticle) {
-            $query->where('article_id', $idArticle);
-        }
+    // Áp dụng các điều kiện lọc dựa vào các tham số
+    if ($idArticle) {
+        $query->where('article_id', $idArticle);
+    }
 
-        if ($idCategory) {
-            $query->where('category_id', $idCategory);
-        }
-        if($volume){
-            $query->where('volume',$volume);
-        }
+    if ($idCategory) {
+        $query->where('category_id', $idCategory);
+    }
 
-        // Lấy kết quả sau khi áp dụng điều kiện
-       $article = $query->get();
+    if ($volume) {
+        $query->where('volume', $volume);
+    }
 
-        // Kiểm tra nếu không tìm thấy kết quả nào
-        if ($article->isEmpty()) {
-            return response()->json(['message' => 'Không tìm thấy bài viết'], 404);
-        }
+    // Lấy kết quả sau khi áp dụng điều kiện
+    $articles = $query->get();
 
-        return response()->json($article, 200);
+    // Kiểm tra nếu không tìm thấy kết quả nào
+    if ($articles->isEmpty()) {
+        return response()->json(['message' => 'Không tìm thấy bài viết'], 404);
+    }
+
+    // Trả về dữ liệu bài viết kèm theo current_step
+    $result = $articles->map(function ($article) {
+        // Lấy đối tượng SubmissionProgress đầu tiên
+        $submissionProgress = $article->SubmissionProgress()->first();
+
+        // Kiểm tra nếu SubmissionProgress tồn tại, lấy current_step
+        $currentStep = $submissionProgress ? $submissionProgress->current_step : null;
+
+        return [
+            'data' => $article,
+            'current_step' => $currentStep,
+        ];
+    });
+
+    return response()->json($result, 200);
+}
     }
     
     public function storeStep1(Request $request, $article_id = null)
     {
+        // Validate the incoming request
         $request->validate([
             'note' => 'required|string',
             'category_id' => 'required|string|max:255',
         ]);
     
+        // Get the authenticated user ID
         $userId = Auth::id();
     
+        // Check if the user is authenticated
         if (!$userId) {
             return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
         }
     
+        // Validate the category ID
         $category = Category::where('category_id', $request->input('category_id'))->first();
         if (!$category) {
             return response()->json(['status' => 401, 'error' => 'Chuyên đề không phù hợp'], 401);
         }
     
         if ($article_id) {
+            // If article_id is provided, update the article
             $article = Article::find($article_id);
     
             if ($article && $article->user_id === $userId) {
+                // Update the article
                 $article->update([
                     'note' => $request->input('note'),
                     'category_id' => $category->category_id,
                 ]);
     
-                SubmissionProgress::updateOrCreate(
-                    ['user_id' => $userId, 'article_id' => $article->article_id],
-                    ['current_step' => 1]
-                );
+                // Update or create submission progress
+                $progress = SubmissionProgress::where('user_id', $userId)
+            ->where('article_id', $article->article_id)
+            ->first();
+    
+        // If no progress record exists, create a new one
+        if (!$progress) {
+            SubmissionProgress::create([
+                'user_id' => $userId,
+                'article_id' => $article->article_id,
+                'current_step' => 1
+            ]);
+        }
     
                 return response()->json([
                     'status' => 200,
@@ -243,17 +278,26 @@ class WizardController extends Controller
             return response()->json(['error' => 'Bài viết không tồn tại hoặc bạn không có quyền sửa bài viết này'], 403);
         }
     
+        // If no article_id is provided, create a new article
         $article = Article::create([
             'note' => $request->input('note'),
             'user_id' => $userId,
             'category_id' => $category->category_id,
         ]);
     
-        SubmissionProgress::create([
-            'user_id' => $userId,
-            'article_id' => $article->article_id,
-            'current_step' => 1
-        ]);
+        // Check if a progress record already exists for this article and user
+        $progress = SubmissionProgress::where('user_id', $userId)
+            ->where('article_id', $article->article_id)
+            ->first();
+    
+        // If no progress record exists, create a new one
+        if (!$progress) {
+            SubmissionProgress::create([
+                'user_id' => $userId,
+                'article_id' => $article->article_id,
+                'current_step' => 1
+            ]);
+        }
     
         return response()->json([
             'status' => 201,
@@ -261,6 +305,7 @@ class WizardController extends Controller
             'article_id' => $article->article_id
         ], 201);
     }
+    
     
     
 
@@ -332,7 +377,7 @@ class WizardController extends Controller
         // Tìm bài viết
         
         $article = Article::find($articleId); // Correct usage
-
+        
     
         // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
         if (!$article ||$article->user_id !== $userId) {
@@ -385,7 +430,20 @@ class WizardController extends Controller
                     ]
                 );
             }
-    
+            $progress = SubmissionProgress::where('user_id', $userId)
+            ->where('article_id', $article->article_id)
+            ->first();
+
+            if ($progress) {
+                // Kiểm tra bước hiện tại và cập nhật tiến trình
+                if ($progress->current_step <= 2) {
+                    // Cập nhật current_step cho tiến trình
+                    $progress->update(['current_step' => 2]);
+                } else {
+                
+            }
+        }
+      
             return response()->json(['status' => 200, 'message' => 'Các tệp đã được tải lên thành công và bài viết đã được cập nhật']);
         }
     
@@ -594,7 +652,7 @@ class WizardController extends Controller
         $progress = SubmissionProgress::where('user_id', $userId)
             ->where('article_id', $article_id)
             ->first();
-    
+  
         if (!$progress) {
             return response()->json(['status' => 404, 'error' => 'Tiến trình không tồn tại'], 404);
         }
@@ -670,7 +728,22 @@ class WizardController extends Controller
                 }
             }
         }
-    
+        
+        $progress = SubmissionProgress::where('user_id', $userId)
+        ->where('article_id', $article->article_id)
+        ->first();
+
+    if ($progress) {
+        // Kiểm tra bước hiện tại và cập nhật tiến trình
+        if ($progress->current_step <=3) {
+            // Cập nhật current_step cho tiến trình
+            $progress->update(['current_step' => 3]);
+        } else {
+            // Nếu đã qua bước 3, chỉ cập nhật
+         
+        
+        }
+    }
         return response()->json(['status' => 200, 'message' => 'Bài viết và đồng tác giả đã được cập nhật thành công']);
     }
     
