@@ -64,4 +64,8 @@ class Article extends Model
     {
         return $this->hasMany(SubmissionProgress::class, 'article_id'); // Đảm bảo khóa ngoại chính xác
     }
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'article_id');
+    }
 }

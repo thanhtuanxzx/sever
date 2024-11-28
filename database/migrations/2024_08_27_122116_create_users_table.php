@@ -27,6 +27,7 @@ class CreateUsersTable extends Migration
             $table->boolean('agree_terms')->default(false);
             $table->boolean('subscribe')->default(false);
             $table->boolean('reviewer')->default(false);
+            
             $table->timestamps();
         });
     }

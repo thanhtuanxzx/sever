@@ -1,11 +1,13 @@
 <?php
-
+use App\Models\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WizardController;
 use App\Http\Controllers\TacGiaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\EditorialController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,6 +50,7 @@ Route::post('/users/email', [WizardController::class, 'getUserByEmail'])->name('
 Route::get('/tac-gia/{id_bai_viet}', [WizardController::class, 'getAuthorIdByBaiVietId']);
 
 Route::get('/chuyen-de', [WizardController::class, 'getCategory']);
+
 Route::middleware('auth:api')->group(function () {
     
     Route::post('/send-message', [ChatController::class, 'sendMessage']);
@@ -60,12 +63,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
     Route::get('/submissions', [WizardController::class, 'getSubmissions']);
     Route::get('/tukhoa/{id_bai_viet}', [WizardController::class, 'getTukhoa']);
-
+    Route::put('/articles/{article_id}/updated', [WizardController::class, 'update_a']);
+    Route::put('/articles/{article_id}/update', [WizardController::class, 'update_w']);
     // Các route khác cần xác thực  
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
     Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
     Route::post('/wizard/step21/{id_bai_viet?}', [WizardController::class, 'storeStep21']);
     Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);
+    Route::post('/wizard/updatestep3/{id_bai_viet?}', [WizardController::class, 'storeStep3_']);
     Route::post('/wizard/step4/{id_bai_viet?}', [WizardController::class, 'storeStep4']);
     Route::post('/wizard/step5/{id_bai_viet?}', [WizardController::class, 'storeStep5']);
     Route::get('/wizard/completed', [WizardController::class, 'completed']);
@@ -76,13 +81,57 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/user/update5', [UserController::class, 'update5']);
     Route::get('/auth/avatar', [UserController::class, 'getAvatar']);
 
-
+  
     });
 
      Route::get('avatar/{filename}', function ($filename) {
         return Storage::disk('public')->response('avatars/' . $filename);
     });
+    Route::get('public/{filename}', function ($filename) {
+        // Trả về file từ thư mục public trong storage
+        return Storage::disk('public')->response('public/' . $filename);
+    });
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'getNotifications']);
+        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/notifications/{notificationId}/mark-read', [NotificationController::class, 'markAsRead']);
+    });
+
     
+    Route::get('download-pdf/{article_id}', function ($article_id) {
+        // Tìm file theo article_id
+        $file = File::where('article_id', $article_id)->first();
     
+        // Kiểm tra nếu file tồn tại
+        if ($file) {
+            // Trả về thông tin file dưới dạng JSON
+            return response()->json([
+                'file_name' => $file->file_name,
+                'file_path' => asset('storage/' . $file->file_path),
+                'mime_type' => $file->file_mime_type,
+                'created_at' => $file->created_at,
+            ]);
+        }
+    
+        // Nếu không tìm thấy file, trả về lỗi
+        return response()->json(['error' => 'File not found'], 404);
+    });
 
 
+    Route::middleware(['auth:api', 'role:1'])->group(function () {
+        // Danh sách bài báo
+        Route::get('editorial/articles', [EditorialController::class, 'index']);
+    
+        // Chi tiết bài báo
+        Route::get('editorial/articles/{id}', [EditorialController::class, 'show']);
+    
+        // Phê duyệt bài báo
+        Route::put('editorial/articles/{id}/approve', [EditorialController::class, 'approve']);
+    
+        // Phân công biên tập viên
+        Route::put('editorial/articles/{id}/assign-editor', [EditorialController::class, 'assignReviewers']);
+    
+        // Thống kê
+        Route::get('statistics', [EditorialController::class, 'statistics']);
+    });
+    

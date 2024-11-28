@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check_wizard_progress' => \App\Http\Middleware\CheckWizardProgress::class,
         'checkQuyen' => \App\Http\Middleware\CheckQuyen::class,
+        'role' => \App\Http\Middleware\CheckApiPermission::class,
     ];
 }

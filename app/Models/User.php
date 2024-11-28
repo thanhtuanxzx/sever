@@ -14,7 +14,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory;
+    use HasFactory,Notifiable;
 
     protected $table = 'users';
 
@@ -63,4 +63,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+    public function notifications()
+{
+    return $this->morphMany(Notification::class, 'notifiable');
+}
+
 }
