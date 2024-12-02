@@ -57,7 +57,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/messages', [ChatController::class, 'getMessages']);
     Route::put('/message/{id}', [ChatController::class, 'updateMessage']);  
     Route::delete('/message/{id}', [ChatController::class, 'deleteMessage']);  
-
+    Route::get('/user/article/files', [WizardController::class, 'getUserArticleFiles']);
     Route::get('/bai-viet', [WizardController::class, 'show']);
     Route::get('/bai-viet1', [WizardController::class, 'show1']);
     Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
@@ -87,10 +87,21 @@ Route::middleware('auth:api')->group(function () {
      Route::get('avatar/{filename}', function ($filename) {
         return Storage::disk('public')->response('avatars/' . $filename);
     });
+    
     Route::get('public/{filename}', function ($filename) {
         // Trả về file từ thư mục public trong storage
         return Storage::disk('public')->response('public/' . $filename);
     });
+    Route::get('uploads/{filename}', function ($filename) {
+        // Kiểm tra sự tồn tại của file
+        if (!Storage::disk('public')->exists('uploads/' . $filename)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+    
+        // Trả về file
+        return Storage::disk('public')->response('uploads/' . $filename);
+    });
+ 
     Route::middleware('auth:api')->group(function () {
         Route::get('/notifications', [NotificationController::class, 'getNotifications']);
         Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);

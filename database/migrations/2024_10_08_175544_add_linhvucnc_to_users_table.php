@@ -14,7 +14,10 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('research_field')->nullable(); // Add the research_field column, can be null
+            $table->string('research_field')->nullable(); 
+            $table->string('avatar_original_name')->nullable();
+            $table->string('avatar_mime_type')->nullable();
+            $table->integer('avatar_size')->nullable();
         });
     }
 

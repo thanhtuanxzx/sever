@@ -66,6 +66,48 @@ class WizardController extends Controller
         ], 200);
     }
 
+    public function getUserArticleFiles(Request $request)
+{
+    // Lấy ID người dùng hiện tại
+    $userId = auth()->id();
+
+    if (!$userId) {
+        return response()->json([
+            'status' => 401,
+            'error' => 'Người dùng chưa được xác thực'
+        ], 401);
+    }
+
+    // Validate article_id từ request
+    $request->validate([
+        'article_id' => 'required|integer'
+    ]);
+
+    // Lấy article_id từ request
+    $articleId = $request->input('article_id');
+
+    // Kiểm tra bài viết có thuộc người dùng hiện tại không
+    $article = Article::where('article_id', $articleId)
+        ->where('user_id', $userId)
+        ->first();
+
+    if (!$article) {
+        return response()->json([
+            'status' => 403,
+            'error' => 'Bài viết không tồn tại hoặc không thuộc về người dùng này'
+        ], 403);
+    }
+
+    // Lấy danh sách file có article_id khớp
+    $files = File::where('article_id', $articleId)->get();
+
+    // Trả về dữ liệu
+    return response()->json([
+        'status' => 200,
+        'data' => $files
+    ], 200);
+}
+
 
     
 
@@ -169,57 +211,64 @@ class WizardController extends Controller
         return response()->json($query->get());
     }
     public function getSubmissions(Request $request)
-    
     {
-        
-{
-        
-    // Lấy các tham số từ request
-    $idArticle = $request->query('article_id');
-    $idCategory = $request->query('category_id');
-    $volume = $request->query('volume');
+        // Lấy ID người dùng hiện tại
+        $userId = auth()->id();
     
-    // Tạo query builder để lọc dữ liệu
-    $query = Article::query();
-
-    // Áp dụng các điều kiện lọc dựa vào các tham số
-    if ($idArticle) {
-        $query->where('article_id', $idArticle);
+        if (!$userId) {
+            return response()->json(['message' => 'Người dùng chưa được xác thực'], 401);
+        }
+    
+        // Lấy các tham số từ request
+        $idArticle = $request->query('article_id');
+        $idCategory = $request->query('category_id');
+        $volume = $request->query('volume');
+    
+        // Tạo query builder để lọc dữ liệu
+        $query = Article::query();
+    
+        // Áp dụng điều kiện lọc bài viết thuộc về người dùng hiện tại
+        $query->where('user_id', $userId);
+    
+        // Áp dụng các điều kiện lọc dựa vào các tham số
+        if ($idArticle) {
+            $query->where('article_id', $idArticle); // Sửa 'article_id' thành 'id'
+        }
+    
+        if ($idCategory) {
+            $query->where('category_id', $idCategory);
+        }
+    
+        if ($volume) {
+            $query->where('volume', $volume);
+        }
+    
+        // Lấy kết quả sau khi áp dụng điều kiện
+        $articles = $query->get();
+    
+        // Kiểm tra nếu không tìm thấy kết quả nào
+        if ($articles->isEmpty()) {
+            return response()->json(['message' => 'Không tìm thấy bài viết'], 404);
+        }
+    
+        // Trả về dữ liệu bài viết kèm theo current_step
+        $result = $articles->map(function ($article) {
+            // Lấy đối tượng SubmissionProgress đầu tiên
+            $submissionProgress = $article->SubmissionProgress()->first();
+    
+            // Kiểm tra nếu SubmissionProgress tồn tại, lấy current_step
+            $currentStep = $submissionProgress ? $submissionProgress->current_step : null;
+    
+            return [
+                'data' => $article,
+                'current_step' => $currentStep,
+            ];
+        });
+    
+        return response()->json($result, 200);
     }
-
-    if ($idCategory) {
-        $query->where('category_id', $idCategory);
-    }
-
-    if ($volume) {
-        $query->where('volume', $volume);
-    }
-
-    // Lấy kết quả sau khi áp dụng điều kiện
-    $articles = $query->get();
-
-    // Kiểm tra nếu không tìm thấy kết quả nào
-    if ($articles->isEmpty()) {
-        return response()->json(['message' => 'Không tìm thấy bài viết'], 404);
-    }
-
-    // Trả về dữ liệu bài viết kèm theo current_step
-    $result = $articles->map(function ($article) {
-        // Lấy đối tượng SubmissionProgress đầu tiên
-        $submissionProgress = $article->SubmissionProgress()->first();
-
-        // Kiểm tra nếu SubmissionProgress tồn tại, lấy current_step
-        $currentStep = $submissionProgress ? $submissionProgress->current_step : null;
-
-        return [
-            'data' => $article,
-            'current_step' => $currentStep,
-        ];
-    });
-
-    return response()->json($result, 200);
-}
-    }
+    
+    
     
     public function storeStep1(Request $request, $article_id = null)
     {

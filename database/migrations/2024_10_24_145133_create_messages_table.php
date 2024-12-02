@@ -15,11 +15,14 @@ return new class extends Migration
     {
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');  // Id người gửi tin nhắn
-            $table->text('message');  // Nội dung tin nhắn
+            $table->unsignedBigInteger('room_id');
+            $table->unsignedBigInteger('user_id');
+            $table->enum('role', ['1', '2', '3', '4']);
+            $table->text('message');
             $table->timestamps();
             
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+           
         });
     }
 
