@@ -808,9 +808,7 @@ class WizardController extends Controller
             return response()->json(['status' => 400, 'error' => 'Không tìm thấy tiến trình của bài viết'], 400);
         }
 
-        if ($progress->current_step >= 2) {
-            
-        }else{
+        if ($progress->current_step < 2) {
             return response()->json([
                 'status' => 400,
                 'error' => 'Tiến trình hiện tại không đủ điều kiện để thực hiện thao tác này. Vui lòng hoàn thành các bước trước đó'
