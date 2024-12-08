@@ -68,7 +68,7 @@ Route::middleware('auth:api')->group(function () {
     // Các route khác cần xác thực  
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
     Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
-    Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);    
+    Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeOrUpdateStep3']);    
     Route::post('/wizard/step4/{id_bai_viet?}', [WizardController::class, 'storeStep4']);
 
     Route::put('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3_']);

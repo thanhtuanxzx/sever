@@ -17,6 +17,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log; 
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\CoAuthorAddedNotification;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CoAuthorAdded; 
 class WizardController extends Controller
    
 {
@@ -414,64 +416,247 @@ class WizardController extends Controller
     //     return response()->json(['status' => 200,'message' => 'Không có file nào được tải lên'], 200);
     // }
 
-    public function storeStep2(Request $request,$articleId = null)
+    // public function storeStep2(Request $request,$articleId = null)
+    // {
+    //     $userId = Auth::id();
+    
+    //     // Kiểm tra người dùng có xác thực hay không
+    //     if (!$userId) {
+    //         return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
+    //     }
+        
+    //     // Tìm bài viết
+        
+    //     $article = Article::find($articleId); // Correct usage
+        
+    
+    //     // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
+    //     if (!$article ||$article->user_id !== $userId) {
+    //         return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+    //     }
+    
+    //     // Validate các file đã tải lên
+    //     $request->validate([
+    //         'file.*' => 'file|max:2048', // Cho phép nhiều file
+    //     ]);
+    
+    //     // Nếu có file mới được tải lên
+    //     if ($request->hasFile('file')) {
+    //         // Lấy tất cả file cũ
+    //         $oldFiles = File::where('article_id',$articleId)->get();
+    
+    //         // Xóa tất cả file cũ
+    //         foreach ($oldFiles as $oldFile) {
+    //             $oldFilePath = 'uploads/' . $oldFile->generated_name;
+    
+    //             // Xóa file nếu tồn tại
+    //             if (Storage::disk('public')->exists($oldFilePath)) {
+    //                 Storage::disk('public')->delete($oldFilePath);
+    //             }
+    
+    //             // Xóa bản ghi trong cơ sở dữ liệu
+    //            File::where('article_id',$articleId)->delete();
+    //         }
+    
+    //         // Lưu file mới
+    //         $files = $request->file('file');
+    
+    //         // Nếu chỉ một file được tải lên, chuyển đổi nó thành mảng để xử lý nhất quán
+    //         if (!is_array($files)) {
+    //             $files = [$files];
+    //         }
+    
+    //         foreach ($files as $file) {
+    //             // Tạo tên file mới
+    //             $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
+    //             $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
+    
+    //             // Tạo hoặc cập nhật thông tin file trong cơ sở dữ liệu
+    //             File::updateOrCreate(
+    //                 ['article_id' =>$articleId, 'generated_name' => $generatedFileName],
+    //                 [
+    //                     'file_name' => $file->getClientOriginalName(),
+    //                     'file_path' => $filePath,
+    //                     'file_mime_type' => $file->getMimeType(),
+    //                 ]
+    //             );
+    //         }
+    //         $progress = SubmissionProgress::where('user_id', $userId)
+    //         ->where('article_id', $article->article_id)
+    //         ->first();
+
+    //         if ($progress) {
+    //             // Kiểm tra bước hiện tại và cập nhật tiến trình
+    //             if ($progress->current_step <= 2) {
+    //                 // Cập nhật current_step cho tiến trình
+    //                 $progress->update(['current_step' => 2]);
+    //             } else {
+                
+    //         }
+    //     }
+      
+    //         return response()->json(['status' => 200, 'message' => 'Các tệp đã được tải lên thành công và bài viết đã được cập nhật']);
+    //     }
+    
+    //     return response()->json(['status' => 200, 'message' => 'Không có tệp nào được tải lên'], 200);
+    // }
+    public function storeStep2(Request $request, $articleId = null)
     {
         $userId = Auth::id();
-    
+
         // Kiểm tra người dùng có xác thực hay không
         if (!$userId) {
             return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
         }
-        
+
         // Tìm bài viết
-        
-        $article = Article::find($articleId); // Correct usage
-        
-    
+        $article = Article::find($articleId);
+
         // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
-        if (!$article ||$article->user_id !== $userId) {
+        if (!$article || $article->user_id !== $userId) {
             return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
         }
-    
+
         // Validate các file đã tải lên
         $request->validate([
             'file.*' => 'file|max:2048', // Cho phép nhiều file
         ]);
-    
+
         // Nếu có file mới được tải lên
         if ($request->hasFile('file')) {
-            // Lấy tất cả file cũ
-            $oldFiles = File::where('article_id',$articleId)->get();
-    
-            // Xóa tất cả file cũ
-            foreach ($oldFiles as $oldFile) {
-                $oldFilePath = 'uploads/' . $oldFile->generated_name;
-    
-                // Xóa file nếu tồn tại
-                if (Storage::disk('public')->exists($oldFilePath)) {
-                    Storage::disk('public')->delete($oldFilePath);
-                }
-    
-                // Xóa bản ghi trong cơ sở dữ liệu
-               File::where('article_id',$articleId)->delete();
+            // Kiểm tra nếu bài viết đã có tệp
+            $oldFiles = File::where('article_id', $articleId)->get();
+
+            if ($oldFiles->isEmpty()) {
+                // Nếu chưa có tệp nào, gọi phương thức POST
+                return $this->postFile($request, $articleId);
+            } else {
+                // Nếu đã có tệp, gọi phương thức PUT (cập nhật)
+                return $this->updateFile($request, $articleId);
             }
-    
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Không có tệp nào được tải lên'], 200);
+    }
+
+    public function postFile(Request $request, $articleId = null)
+    {
+        $userId = Auth::id();
+
+        // Kiểm tra người dùng có xác thực hay không
+        if (!$userId) {
+            return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
+        }
+
+        // Tìm bài viết
+        $article = Article::find($articleId);
+
+        // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
+        if (!$article || $article->user_id !== $userId) {
+            return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+        }
+
+        // Validate các file đã tải lên
+        $request->validate([
+            'file.*' => 'file|max:2048', // Cho phép nhiều file
+        ]);
+
+        // Nếu có file mới được tải lên
+        if ($request->hasFile('file')) {
             // Lưu file mới
             $files = $request->file('file');
-    
+
             // Nếu chỉ một file được tải lên, chuyển đổi nó thành mảng để xử lý nhất quán
             if (!is_array($files)) {
                 $files = [$files];
             }
-    
+
             foreach ($files as $file) {
                 // Tạo tên file mới
                 $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
                 $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
-    
+
+                // Tạo thông tin file trong cơ sở dữ liệu
+                File::create([
+                    'article_id' => $articleId,
+                    'generated_name' => $generatedFileName,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_mime_type' => $file->getMimeType(),
+                ]);
+            }
+
+            // Cập nhật tiến trình nếu cần
+            $progress = SubmissionProgress::where('user_id', $userId)
+                ->where('article_id', $article->article_id)
+                ->first();
+
+            if ($progress && $progress->current_step <= 2) {
+                $progress->update(['current_step' => 2]);
+            }
+
+            return response()->json(['status' => 200, 'message' => 'Các tệp đã được tải lên thành công và bài viết đã được cập nhật']);
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Không có tệp nào được tải lên'], 200);
+    }
+
+    public function updateFile(Request $request, $articleId = null)
+    {
+        $userId = Auth::id();
+
+        // Kiểm tra người dùng có xác thực hay không
+        if (!$userId) {
+            return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
+        }
+
+        // Tìm bài viết
+        $article = Article::find($articleId);
+
+        // Kiểm tra bài viết có tồn tại và thuộc về người dùng không
+        if (!$article || $article->user_id !== $userId) {
+            return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+        }
+
+        // Validate các file đã tải lên
+        $request->validate([
+            'file.*' => 'file|max:2048', // Cho phép nhiều file
+        ]);
+
+        // Nếu có file mới được tải lên
+        if ($request->hasFile('file')) {
+            // Lấy tất cả file cũ
+            $oldFiles = File::where('article_id', $articleId)->get();
+
+            // Xóa tất cả file cũ
+            foreach ($oldFiles as $oldFile) {
+                $oldFilePath = 'uploads/' . $oldFile->generated_name;
+
+                // Xóa file nếu tồn tại
+                if (Storage::disk('public')->exists($oldFilePath)) {
+                    Storage::disk('public')->delete($oldFilePath);
+                }
+
+                // Xóa bản ghi trong cơ sở dữ liệu
+                $oldFile->delete();
+            }
+
+            // Lưu file mới
+            $files = $request->file('file');
+
+            // Nếu chỉ một file được tải lên, chuyển nó thành mảng để xử lý nhất quán
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            foreach ($files as $file) {
+                // Tạo tên file mới
+                $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
+
                 // Tạo hoặc cập nhật thông tin file trong cơ sở dữ liệu
                 File::updateOrCreate(
-                    ['article_id' =>$articleId, 'generated_name' => $generatedFileName],
+                    ['article_id' => $articleId, 'generated_name' => $generatedFileName],
                     [
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $filePath,
@@ -479,142 +664,274 @@ class WizardController extends Controller
                     ]
                 );
             }
-            $progress = SubmissionProgress::where('user_id', $userId)
-            ->where('article_id', $article->article_id)
-            ->first();
 
-            if ($progress) {
-                // Kiểm tra bước hiện tại và cập nhật tiến trình
-                if ($progress->current_step <= 2) {
-                    // Cập nhật current_step cho tiến trình
-                    $progress->update(['current_step' => 2]);
-                } else {
-                
+            // Cập nhật tiến trình nếu cần
+            $progress = SubmissionProgress::where('user_id', $userId)
+                ->where('article_id', $article->article_id)
+                ->first();
+
+            if ($progress && $progress->current_step <= 2) {
+                $progress->update(['current_step' => 2]);
             }
+
+            return response()->json(['status' => 200, 'message' => 'Các tệp đã được cập nhật thành công']);
         }
-      
-            return response()->json(['status' => 200, 'message' => 'Các tệp đã được tải lên thành công và bài viết đã được cập nhật']);
-        }
-    
+
         return response()->json(['status' => 200, 'message' => 'Không có tệp nào được tải lên'], 200);
     }
+
+
     
    
-    public function storeStep3(Request $request, $article_id = null)
+    // public function storeStep3(Request $request, $article_id = null)
+    // {
+    //     $userId = Auth::id();
+    
+    //     if (!$userId) {
+    //         return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
+    //     }
+    
+    //     $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'abstract' => 'nullable|string|max:250',
+    //         'keyword' => 'nullable|string',
+    //         'citations' => 'nullable|string', // Make citations nullable
+    
+    //         'coAuthors' => 'nullable|array',
+    //         'coAuthors.*.name' => 'required|string',
+    //         'coAuthors.*.email' => 'required|email',
+    //         'coAuthors.*.role' => 'required|string',
+    //     ]);
+    
+    //     // Lấy tiến trình của người dùng
+    //     $progress = SubmissionProgress::where('user_id', $userId)
+    //         ->where('article_id', $article_id)
+    //         ->first();
+  
+    //     if (!$progress) {
+    //         return response()->json(['status' => 404, 'error' => 'Tiến trình không tồn tại'], 404);
+    //     }
+    
+    //     // Lấy bài viết dựa trên article_id
+    //     $article = Article::find($article_id);
+    
+    //     if (!$article || $article->user_id !== $userId) {
+    //         return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+    //     }
+    
+    //     // Cập nhật thông tin bài viết
+    //     $article->update([
+    //         'title' => $request->input('title'),
+    //         'abstract' => $request->input('abstract'),
+    //         'citations' => $request->input('citations'),
+    //     ]);
+    
+    //     // Xử lý từ khóa
+    //     if ($request->filled('keyword')) {
+    //         $keywords = preg_split('/\r\n|\r|\n/', $request->input('keyword')); // Tách từ khóa vào mảng
+    //         foreach ($keywords as $keyword) { // Dùng biến đúng tên là $keywords
+    //             $keyword = trim($keyword); // Loại bỏ khoảng trắng thừa
+    //             if (!empty($keyword)) { // Kiểm tra nếu từ khóa không rỗng
+    //                 Keyword::create([ // Tạo mới bản ghi từ khóa
+    //                     'article_id' => $article->article_id, // Use $article->id
+    //                     'keyword' => $keyword
+    //                 ]);
+    //             }
+    //         }
+    //     }
+         
+    //     // Xử lý đồng tác giả
+    //     if ($request->has('coAuthors')) {
+    //         foreach ($request->input('coAuthors') as $coAuthor) {
+    //             $user = User::where('email', $coAuthor['email'])->first();
+    
+    //             if ($user) {
+    //                 // Kiểm tra xem đồng tác giả đã tồn tại hay chưa
+    //                 $existingCoAuthor = ArticleAuthor::where('author_id', $user->id)
+    //                     ->where('article_id', $article->article_id) // Use $article->id
+    //                     ->first();
+    
+    //                 if (!$existingCoAuthor) {
+    //                     ArticleAuthor::create([
+    //                         'author_id' => $user->id,
+    //                         'article_id' => $article->article_id, // Use $article->id
+    //                         'role' => $coAuthor['role'],
+    //                     ]);
+    //                     // Gửi thông báo cho đồng tác giả
+    //                     $notification = Notification::create([
+    //                         'user_id' => $user->id,
+    //                         'title' => 'Bạn đã được thêm làm đồng tác giả',
+    //                         'message' => "Bạn đã được thêm làm đồng tác giả của bài viết: \"{$article->title}\".",
+    //                         'url' => url("/articles/{$article->article_id}"),
+    //                     ]);
+                    
+                       
+    //                 } else {
+    //                     // You might want to continue with the next co-author if one already exists
+    //                     continue; // Skip and continue to the next co-author
+    //                 }
+    //             } else {
+    //                 return response()->json(['status' => 404, 'error' => "Không tìm thấy người dùng với email: {$coAuthor['email']}"], 404);
+    //             }
+    //         }
+    //     }
+        
+    //     $progress = SubmissionProgress::where('user_id', $userId)
+    //     ->where('article_id', $article->article_id)
+    //     ->first();
+
+    //     if ($progress) {
+    //         // Kiểm tra bước hiện tại và cập nhật tiến trình
+    //         if ($progress->current_step <=3) {
+    //             // Cập nhật current_step cho tiến trình
+    //             $progress->update(['current_step' => 3]);
+    //         } else {
+    //             // Nếu đã qua bước 3, chỉ cập nhật
+            
+            
+    //         }
+    //     }
+    //     return response()->json(['status' => 200, 'message' => 'Bài viết và đồng tác giả đã được cập nhật thành công']);
+    // }
+    public function storeOrUpdateStep3(Request $request, $article_id = null)
     {
         $userId = Auth::id();
-    
+
         if (!$userId) {
             return response()->json(['status' => 401, 'error' => 'User not authenticated'], 401);
         }
-    
+
+        // Kiểm tra và validate dữ liệu
         $request->validate([
             'title' => 'required|string|max:255',
             'abstract' => 'nullable|string|max:250',
             'keyword' => 'nullable|string',
-            'citations' => 'nullable|string', // Make citations nullable
-    
+            'citations' => 'nullable|string',
             'coAuthors' => 'nullable|array',
             'coAuthors.*.name' => 'required|string',
-            'coAuthors.*.email' => 'required|email',
+            'coAuthors.*.email' =>'required|email|distinct',
             'coAuthors.*.role' => 'required|string',
         ]);
-    
-        // Lấy tiến trình của người dùng
-        $progress = SubmissionProgress::where('user_id', $userId)
-            ->where('article_id', $article_id)
-            ->first();
-  
-        if (!$progress) {
-            return response()->json(['status' => 404, 'error' => 'Tiến trình không tồn tại'], 404);
+        $loggedInUserEmail = Auth::user()->email;
+        foreach ($request->input('coAuthors') as $coAuthor) {
+            // Kiểm tra xem email của đồng tác giả có tồn tại trong bảng users không
+            $user = User::where('email', $coAuthor['email'])->first();
+            
+            if (!$user) {
+                return response()->json(['status' => 400, 'error' => 'Email của đồng tác giả không tồn tại trong hệ thống.'], 400);
+            }
+        
+            // Kiểm tra xem email của đồng tác giả có trùng với email của tác giả chính không
+            if ($coAuthor['email'] == $loggedInUserEmail) {
+                return response()->json(['status' => 400, 'error' => 'Email của đồng tác giả không thể trùng với email của tác giả chính'], 400);
+            }
         }
-    
-        // Lấy bài viết dựa trên article_id
-        $article = Article::find($article_id);
-    
-        if (!$article || $article->user_id !== $userId) {
-            return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+        
+
+
+        // Kiểm tra và xử lý bài viết
+        if ($article_id) {
+            // Nếu có article_id, sử dụng PUT để cập nhật
+            $article = Article::find($article_id);
+
+            if (!$article || $article->user_id !== $userId) {
+                return response()->json(['status' => 403, 'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
+            }
+
+            // Cập nhật bài viết mà không thay đổi current_step
+            $currentStep = SubmissionProgress::where('article_id', $article->article_id)
+                                            ->where('user_id', $userId)
+                                            ->first();
+            if ($currentStep && $currentStep->current_step <= 3) {
+                // Nếu current_step <= 3, chỉ cập nhật mà không thay đổi current_step
+                $article->title = $request->input('title');
+                $article->abstract = $request->input('abstract');
+                $article->citations = $request->input('citations');
+                $article->save();
+            }
+
+        } else {
+            // Nếu không có article_id, tức là tạo mới
+            // Kiểm tra tiến trình
+            $progress = SubmissionProgress::where('user_id', $userId)
+                                        ->where('current_step', 2)
+                                        ->first();
+
+            if (!$progress) {
+                return response()->json(['status' => 400, 'error' => 'Tiến trình phải ở bước 2 mới được tạo mới bài viết'], 400);
+            }
+
+            // Nếu tiến trình ở bước 2, tạo mới bài viết và đặt current_step = 3
+            $article = new Article();
+            $article->user_id = $userId;
+            $article->title = $request->input('title');
+            $article->abstract = $request->input('abstract');
+            $article->citations = $request->input('citations');
+            $article->save();
+
+            // Cập nhật tiến trình
+            SubmissionProgress::create([
+                'user_id' => $userId,
+                'article_id' => $article->article_id,
+                'current_step' => 3,
+            ]);
         }
-    
-        // Cập nhật thông tin bài viết
-        $article->update([
-            'title' => $request->input('title'),
-            'abstract' => $request->input('abstract'),
-            'citations' => $request->input('citations'),
-        ]);
-    
-        // Xử lý từ khóa
+
+        // Thêm tác giả chính (người dùng hiện tại)
+       
+
+        // Cập nhật từ khóa
         if ($request->filled('keyword')) {
-            $keywords = preg_split('/\r\n|\r|\n/', $request->input('keyword')); // Tách từ khóa vào mảng
-            foreach ($keywords as $keyword) { // Dùng biến đúng tên là $keywords
-                $keyword = trim($keyword); // Loại bỏ khoảng trắng thừa
-                if (!empty($keyword)) { // Kiểm tra nếu từ khóa không rỗng
-                    Keyword::create([ // Tạo mới bản ghi từ khóa
-                        'article_id' => $article->article_id, // Use $article->id
+            Keyword::where('article_id', $article->article_id)->delete(); // Xóa các từ khóa cũ
+
+            $keywords = preg_split('/\r\n|\r|\n/', $request->input('keyword'));
+            foreach ($keywords as $keyword) {
+                $keyword = trim($keyword);
+                if (!empty($keyword)) {
+                    Keyword::create([
+                        'article_id' => $article->article_id,
                         'keyword' => $keyword
                     ]);
                 }
             }
         }
-         
-        // Xử lý đồng tác giả
+
         if ($request->has('coAuthors')) {
+            // Xóa tất cả các đồng tác giả cũ trước khi thêm mới
+            ArticleAuthor::where('article_id', $article->article_id)->delete();
+        
             foreach ($request->input('coAuthors') as $coAuthor) {
                 $user = User::where('email', $coAuthor['email'])->first();
-    
+        
                 if ($user) {
                     // Kiểm tra xem đồng tác giả đã tồn tại hay chưa
                     $existingCoAuthor = ArticleAuthor::where('author_id', $user->id)
-                        ->where('article_id', $article->article_id) // Use $article->id
+                        ->where('article_id', $article->article_id)
                         ->first();
-    
+        
                     if (!$existingCoAuthor) {
                         ArticleAuthor::create([
                             'author_id' => $user->id,
-                            'article_id' => $article->article_id, // Use $article->id
+                            'article_id' => $article->article_id,
                             'role' => $coAuthor['role'],
                         ]);
-                        // Gửi thông báo cho đồng tác giả
-                        $notification = Notification::create([
-                            'user_id' => $user->id,
-                            'title' => 'Bạn đã được thêm làm đồng tác giả',
-                            'message' => "Bạn đã được thêm làm đồng tác giả của bài viết: \"{$article->title}\".",
-                            'url' => url("/articles/{$article->article_id}"),
-                        ]);
-                    
-                        // Phát thông báo real-time qua Pusher
-                        // broadcast(new CoAuthorAdded($user->id, $notification));
-                    
-                      
-                    // broadcast(new CoAuthorAdded($user->id, $notification));
-                    } else {
-                        // You might want to continue with the next co-author if one already exists
-                        continue; // Skip and continue to the next co-author
+        
+                        // Gửi email cho đồng tác giả
+                        Mail::to($user->email)->send(new CoAuthorAdded($user, $article));
                     }
-                } else {
-                    return response()->json(['status' => 404, 'error' => "Không tìm thấy người dùng với email: {$coAuthor['email']}"], 404);
                 }
             }
         }
+        ArticleAuthor::updateOrCreate(
+            ['article_id' => $article->article_id, 'author_id' => $userId],
+            ['role' => 'Chính']  // Vai trò là 'Chính'
+        );
         
-        $progress = SubmissionProgress::where('user_id', $userId)
-        ->where('article_id', $article->article_id)
-        ->first();
 
-    if ($progress) {
-        // Kiểm tra bước hiện tại và cập nhật tiến trình
-        if ($progress->current_step <=3) {
-            // Cập nhật current_step cho tiến trình
-            $progress->update(['current_step' => 3]);
-        } else {
-            // Nếu đã qua bước 3, chỉ cập nhật
-         
+        return response()->json(['status' => 200, 'message' => $article_id ? 'Bài viết đã được cập nhật thành công' : 'Bài viết đã được tạo thành công và tiến trình được cập nhật']);
+    }
+
         
-        }
-    }
-        return response()->json(['status' => 200, 'message' => 'Bài viết và đồng tác giả đã được cập nhật thành công']);
-    }
-    
     
 
     public function storeStep4(Request $request, $article_id = null)
