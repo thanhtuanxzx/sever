@@ -57,29 +57,31 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/messages', [ChatController::class, 'getMessages']);
     Route::put('/message/{id}', [ChatController::class, 'updateMessage']);  
     Route::delete('/message/{id}', [ChatController::class, 'deleteMessage']);  
+
     Route::get('/user/article/files', [WizardController::class, 'getUserArticleFiles']);
     Route::get('/bai-viet', [WizardController::class, 'show']);
     Route::get('/bai-viet1', [WizardController::class, 'show1']);
     Route::get('/user/tokens', [AuthController::class, 'getUserTokens']);
     Route::get('/submissions', [WizardController::class, 'getSubmissions']);
     Route::get('/tukhoa/{id_bai_viet}', [WizardController::class, 'getTukhoa']);
-    Route::put('/articles/{article_id}/updated', [WizardController::class, 'update_a']);
-    Route::put('/articles/{article_id}/update', [WizardController::class, 'update_w']);
+
     // Các route khác cần xác thực  
     Route::post('/wizard/step1/{id_bai_viet?}', [WizardController::class, 'storeStep1']);
     Route::post('/wizard/step2/{id_bai_viet?}', [WizardController::class, 'storeStep2']);
-    Route::post('/wizard/step21/{id_bai_viet?}', [WizardController::class, 'storeStep21']);
-    Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);
-    Route::post('/wizard/updatestep3/{id_bai_viet?}', [WizardController::class, 'storeStep3_']);
+    Route::post('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3']);    
     Route::post('/wizard/step4/{id_bai_viet?}', [WizardController::class, 'storeStep4']);
-    Route::post('/wizard/step5/{id_bai_viet?}', [WizardController::class, 'storeStep5']);
-    Route::get('/wizard/completed', [WizardController::class, 'completed']);
+
+    Route::put('/wizard/step3/{id_bai_viet?}', [WizardController::class, 'storeStep3_']);
+    Route::put('/articles/{article_id}/updated', [WizardController::class, 'update_a']);
+    Route::put('/articles/{article_id}/update', [WizardController::class, 'update_w']);
+
+    Route::get('/auth/avatar', [UserController::class, 'getAvatar']);
     Route::put('/user/update1', [UserController::class, 'update1']);
     Route::put('/user/update2', [UserController::class, 'update2']);
     Route::put('/user/update3', [UserController::class, 'update3']);
-    Route::post('/user/update4', [UserController::class, 'update4']);
+    Route::put('/user/update4', [UserController::class, 'update4']);
     Route::put('/user/update5', [UserController::class, 'update5']);
-    Route::get('/auth/avatar', [UserController::class, 'getAvatar']);
+  
 
   
     });

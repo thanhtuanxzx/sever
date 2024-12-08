@@ -499,184 +499,7 @@ class WizardController extends Controller
         return response()->json(['status' => 200, 'message' => 'Không có tệp nào được tải lên'], 200);
     }
     
-    public function update_a(Request $request, $article_id = null)
-    {
-        // Xác thực dữ liệu đầu vào
-        $request->validate([
-            'note' => 'required|string',
-            'keyword' => 'nullable|string',
-            'citations' => 'nullable|string', 
-        ]);
-        
-        // Lấy thông tin bài viết từ database
-        $article = Article::find($article_id);
-        
-        if (!$article) {
-            return response()->json(['status' => 404, 'error' => 'Bài viết không tồn tại'], 404);
-        }
-    
-        // Cập nhật thông tin bài viết
-        $article->update([
-            'note' => $request->input('note'),
-            'citations' => $request->input('citations'),
-        ]);
-    
-        // Xử lý từ khóa nếu có
-        if ($request->filled('keyword')) {
-            // Tách từ khóa từ dữ liệu đầu vào
-            $keywords = preg_split('/\r\n|\r|\n/', $request->input('keyword')); // Tách từ khóa vào mảng
-            $keywords = array_map('trim', $keywords); // Loại bỏ khoảng trắng thừa cho từng từ khóa
-    
-            // Lấy danh sách từ khóa hiện tại của bài viết
-            $existingKeywords = Keyword::where('article_id', $article->article_id)->pluck('keyword')->toArray();
-    
-            // Thêm, sửa từ khóa nếu cần
-            foreach ($keywords as $keyword) {
-                if (!empty($keyword)) {
-                    // Kiểm tra xem từ khóa đã tồn tại trong bài viết chưa
-                    $existingKeyword = Keyword::where('article_id', $article->article_id)
-                                              ->where('keyword', $keyword)
-                                              ->first();
-            
-                    if ($existingKeyword) {
-                        // Nếu từ khóa đã tồn tại, cập nhật lại từ khóa (ở đây bạn có thể cập nhật lại giá trị keyword)
-                        $existingKeyword->update([
-                            'updated_at' => now(),  // Cập nhật thời gian sửa đổi
-                        ]);
-                    } else {
-                        // Nếu từ khóa chưa tồn tại, tạo mới từ khóa
-                        Keyword::create([ 
-                            'article_id' => $article->article_id,
-                            'keyword' => $keyword
-                        ]);
-                    }
-                }
-            }
-    
-            // Xóa các từ khóa không còn trong danh sách mới
-            $keywordsToDelete = array_diff($existingKeywords, $keywords);
-            foreach ($keywordsToDelete as $keyword) {
-                Keyword::where('article_id', $article->article_id)
-                       ->where('keyword', $keyword)
-                       ->delete();
-            }
-        }
-    
-        // Trả về phản hồi thành công
-        return response()->json(['status' => 200, 'message' => 'Bài viết và từ khóa đã được cập nhật thành công']);
-    }
-    
-    
-    public function update_w(Request $request, $article_id = null)
-    {
-        try {
-            // Xác thực dữ liệu đầu vào
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'abstract' => 'nullable|string|max:250',
-                'category_id' => 'required|string|max:255',
-            ]);
-    
-            // Kiểm tra xem chuyên mục có tồn tại không
-            $category = Category::where('category_id', $request->input('category_id'))->first();
-            if (!$category) {
-                return response()->json(['status' => 400, 'error' => 'Chuyên đề không phù hợp'], 400);
-            }
-    
-            // Tìm bài viết theo ID
-            $article = Article::find($article_id);
-            if (!$article) {
-                return response()->json(['status' => 404, 'error' => 'Không tìm thấy bài viết'], 404);
-            }
-    
-            // Cập nhật bài viết
-            $article->update([
-                'title' => $request->input('title'),
-                'abstract' => $request->input('abstract'),
-                'category_id' => $category->category_id,
-            ]);
-    
-            return response()->json(['status' => 200, 'message' => 'Bài viết đã được cập nhật thành công']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Lỗi xác thực
-            return response()->json([
-                'status' => 422,
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (\Exception $e) {
-            // Lỗi không mong muốn
-            return response()->json([
-                'status' => 500,
-                'error' => 'Đã xảy ra lỗi trong quá trình xử lý',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
-    }
-    //Cập nhật thông tin đông tác giả
-    public function storeStep3_(Request $request, $article_id = null)
-    {
-        // Xác thực dữ liệu đầu vào
-        $request->validate([
-            'coAuthors' => 'nullable|array',
-            'coAuthors.*.name' => 'required|string',
-            'coAuthors.*.email' => 'required|email',
-            'coAuthors.*.role' => 'required|string',
-        ]);
-        
-        // Lấy thông tin bài viết dựa trên article_id
-        $article = Article::find($article_id);
-        
-        if (!$article) {
-            return response()->json(['status' => 404, 'error' => 'Bài viết không tồn tại'], 404);
-        }
-    
-        // Duyệt qua từng đồng tác giả và xử lý
-        if ($request->has('coAuthors')) {
-            foreach ($request->input('coAuthors') as $coAuthor) {
-                // Tìm người dùng theo email của đồng tác giả
-                $user = User::where('email', $coAuthor['email'])->first();
-    
-                if ($user) {
-                    // Kiểm tra và cập nhật hoặc tạo mới bản ghi đồng tác giả
-                    $articleAuthor = ArticleAuthor::updateOrCreate(
-                        [
-                            'author_id' => $user->id,
-                            'article_id' => $article->article_id, // Sử dụng đúng article_id
-                        ],
-                        [
-                            'role' => $coAuthor['role'],
-                        ]
-                    );
-    
-                    // Gửi thông báo cho đồng tác giả
-                    $notification = Notification::create([
-                        'user_id' => $user->id,
-                        'title' => 'Bạn đã được thêm hoặc cập nhật làm đồng tác giả',
-                        'message' => "Bạn đã được thêm hoặc cập nhật làm đồng tác giả của bài viết: \"{$article->title}\".",
-                        'url' => url("/articles/{$article->article_id}"),
-                    ]);
-    
-                    // Phát thông báo real-time qua Pusher (nếu cần)
-                    // broadcast(new CoAuthorAdded($user->id, $notification));
-    
-                } else {
-                    // Nếu không tìm thấy người dùng với email, trả về lỗi
-                    return response()->json(['status' => 404, 'error' => "Không tìm thấy người dùng với email: {$coAuthor['email']}"], 404);
-                }
-            }
-        }
-    
-        // Trả về phản hồi thành công
-        return response()->json(['status' => 200, 'message' => 'Đồng tác giả đã được cập nhật hoặc thêm thành công']);
-    }
-    
-    
-
-
-    
-    
-
-
+   
     public function storeStep3(Request $request, $article_id = null)
     {
         $userId = Auth::id();
@@ -733,11 +556,7 @@ class WizardController extends Controller
                 }
             }
         }
-        
-        
-    
-    
-    
+         
         // Xử lý đồng tác giả
         if ($request->has('coAuthors')) {
             foreach ($request->input('coAuthors') as $coAuthor) {
@@ -827,33 +646,174 @@ class WizardController extends Controller
         return response()->json(['status' => 200,'message' => 'Bước 4 đã lưu thành công'], 200);
     }
 
-    // public function storeStep5(Request $request, $article_id = null)
-    // {
-    //     $userId = Auth::id();
-
-    //     if (!$userId) {
-    //         return response()->json(['status' => 401,'error' => 'User not authenticated'], 401);
-    //     }
-
-    //      // Lấy tiến trình của người dùng
-    //      $progress = SubmissionProgress::where('user_id', $userId)
-    //      ->where('article_id', $article_id)
-    //      ->first();
+    //Cập nhật thông tin đông tác giả
+    public function storeStep3_(Request $request, $article_id = null)
+    {
+        // Xác thực dữ liệu đầu vào
+        $request->validate([
+            'coAuthors' => 'nullable|array',
+            'coAuthors.*.name' => 'required|string',
+            'coAuthors.*.email' => 'required|email',
+            'coAuthors.*.role' => 'required|string',
+        ]);
+        
+        // Lấy thông tin bài viết dựa trên article_id
+        $article = Article::find($article_id);
+        
+        if (!$article) {
+            return response()->json(['status' => 404, 'error' => 'Bài viết không tồn tại'], 404);
+        }
     
-    //     if (!$progress) {
-    //         return response()->json(['status' => 404,'error' => 'Tiến trình không tồn tại'], 404);
-    //     }
+        // Duyệt qua từng đồng tác giả và xử lý
+        if ($request->has('coAuthors')) {
+            foreach ($request->input('coAuthors') as $coAuthor) {
+                // Tìm người dùng theo email của đồng tác giả
+                $user = User::where('email', $coAuthor['email'])->first();
     
-    //     // Lấy bài viết dựa trên article_id
-    //    $article = Article::find($article_id);
+                if ($user) {
+                    // Kiểm tra và cập nhật hoặc tạo mới bản ghi đồng tác giả
+                    $articleAuthor = ArticleAuthor::updateOrCreate(
+                        [
+                            'author_id' => $user->id,
+                            'article_id' => $article->article_id, // Sử dụng đúng article_id
+                        ],
+                        [
+                            'role' => $coAuthor['role'],
+                        ]
+                    );
     
-    //     if (!$Article ||$article->user_id !== $userId) {
-    //         return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
-    //     }
+                    // Gửi thông báo cho đồng tác giả
+                    $notification = Notification::create([
+                        'user_id' => $user->id,
+                        'title' => 'Bạn đã được thêm hoặc cập nhật làm đồng tác giả',
+                        'message' => "Bạn đã được thêm hoặc cập nhật làm đồng tác giả của bài viết: \"{$article->title}\".",
+                        'url' => url("/articles/{$article->article_id}"),
+                    ]);
+    
+                    // Phát thông báo real-time qua Pusher (nếu cần)
+                    // broadcast(new CoAuthorAdded($user->id, $notification));
+    
+                } else {
+                    // Nếu không tìm thấy người dùng với email, trả về lỗi
+                    return response()->json(['status' => 404, 'error' => "Không tìm thấy người dùng với email: {$coAuthor['email']}"], 404);
+                }
+            }
+        }
+    
+        // Trả về phản hồi thành công
+        return response()->json(['status' => 200, 'message' => 'Đồng tác giả đã được cập nhật hoặc thêm thành công']);
+    }
 
-   
-    //     $progress->update(['current_step' => 5]);
-
-    //     return response()->json(['status' => 200,'message' => 'Bước 5 đã hoàn thành và bài viết đã được gửi'], 200);
-    // }
+    public function update_a(Request $request, $article_id = null)
+    {
+        // Xác thực dữ liệu đầu vào
+        $request->validate([
+            'note' => 'required|string',
+            'keyword' => 'nullable|string',
+            'citations' => 'nullable|string', 
+        ]);
+        
+        // Lấy thông tin bài viết từ database
+        $article = Article::find($article_id);
+        
+        if (!$article) {
+            return response()->json(['status' => 404, 'error' => 'Bài viết không tồn tại'], 404);
+        }
+    
+        // Cập nhật thông tin bài viết
+        $article->update([
+            'note' => $request->input('note'),
+            'citations' => $request->input('citations'),
+        ]);
+    
+        // Xử lý từ khóa nếu có
+        if ($request->filled('keyword')) {
+            // Tách từ khóa từ dữ liệu đầu vào
+            $keywords = preg_split('/\r\n|\r|\n/', $request->input('keyword')); // Tách từ khóa vào mảng
+            $keywords = array_map('trim', $keywords); // Loại bỏ khoảng trắng thừa cho từng từ khóa
+    
+            // Lấy danh sách từ khóa hiện tại của bài viết
+            $existingKeywords = Keyword::where('article_id', $article->article_id)->pluck('keyword')->toArray();
+    
+            // Thêm, sửa từ khóa nếu cần
+            foreach ($keywords as $keyword) {
+                if (!empty($keyword)) {
+                    // Kiểm tra xem từ khóa đã tồn tại trong bài viết chưa
+                    $existingKeyword = Keyword::where('article_id', $article->article_id)
+                                              ->where('keyword', $keyword)
+                                              ->first();
+            
+                    if ($existingKeyword) {
+                        // Nếu từ khóa đã tồn tại, cập nhật lại từ khóa (ở đây bạn có thể cập nhật lại giá trị keyword)
+                        $existingKeyword->update([
+                            'updated_at' => now(),  // Cập nhật thời gian sửa đổi
+                        ]);
+                    } else {
+                        // Nếu từ khóa chưa tồn tại, tạo mới từ khóa
+                        Keyword::create([ 
+                            'article_id' => $article->article_id,
+                            'keyword' => $keyword
+                        ]);
+                    }
+                }
+            }
+    
+            // Xóa các từ khóa không còn trong danh sách mới
+            $keywordsToDelete = array_diff($existingKeywords, $keywords);
+            foreach ($keywordsToDelete as $keyword) {
+                Keyword::where('article_id', $article->article_id)
+                       ->where('keyword', $keyword)
+                       ->delete();
+            }
+        }
+    
+        // Trả về phản hồi thành công
+        return response()->json(['status' => 200, 'message' => 'Bài viết và từ khóa đã được cập nhật thành công']);
+    }
+    public function update_w(Request $request, $article_id = null)
+    {
+        try {
+            // Xác thực dữ liệu đầu vào
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'abstract' => 'nullable|string|max:250',
+                'category_id' => 'required|string|max:255',
+            ]);
+    
+            // Kiểm tra xem chuyên mục có tồn tại không
+            $category = Category::where('category_id', $request->input('category_id'))->first();
+            if (!$category) {
+                return response()->json(['status' => 400, 'error' => 'Chuyên đề không phù hợp'], 400);
+            }
+    
+            // Tìm bài viết theo ID
+            $article = Article::find($article_id);
+            if (!$article) {
+                return response()->json(['status' => 404, 'error' => 'Không tìm thấy bài viết'], 404);
+            }
+    
+            // Cập nhật bài viết
+            $article->update([
+                'title' => $request->input('title'),
+                'abstract' => $request->input('abstract'),
+                'category_id' => $category->category_id,
+            ]);
+    
+            return response()->json(['status' => 200, 'message' => 'Bài viết đã được cập nhật thành công']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Lỗi xác thực
+            return response()->json([
+                'status' => 422,
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Lỗi không mong muốn
+            return response()->json([
+                'status' => 500,
+                'error' => 'Đã xảy ra lỗi trong quá trình xử lý',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
+    
