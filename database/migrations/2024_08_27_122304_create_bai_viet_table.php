@@ -28,7 +28,7 @@ return new class extends Migration
             
             $table->date('submission_date')->nullable();       // ngay_gui -> submission_date
             $table->date('acceptance_date')->nullable();       // ngay_chap_nhan -> acceptance_date
-            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending'); // trang_thai -> status
+            $table->enum('status', ['Pending', 'Approved', 'Rejected','Pending_committee','Send_to_editor','Not_approved','Committee_rejected','Pending_editor'])->default('Pending'); // trang_thai -> status
             $table->string('volume')->nullable();              // tap -> volume
           
             $table->timestamps();

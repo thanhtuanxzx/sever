@@ -928,12 +928,12 @@ class WizardController extends Controller
         }
     
         // Lấy bài viết dựa trên article_id
-       $article = Article::find($article_id);
+        $article = Article::find($article_id);
     
         if (!$article ||$article->user_id !== $userId) {
             return response()->json(['status' => 403,'error' => 'Bạn không có quyền sửa bài viết này hoặc bài viết không tồn tại'], 403);
         }
-
+        $article->update(['status'=>'Pending_committee']);
         $progress->update(['current_step' => 4]);
 
         return response()->json(['status' => 200,'message' => 'Bước 4 đã lưu thành công'], 200);

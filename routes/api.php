@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\EditorialController;
+use App\Http\Controllers\CommitteeController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -147,4 +148,9 @@ Route::middleware('auth:api')->group(function () {
         // Thống kê
         Route::get('statistics', [EditorialController::class, 'statistics']);
     });
+    Route::middleware(['auth:api', 'role:2'])->group(function () {
+        Route::get('/committee/review-articles', [CommitteeController::class, 'getPendingArticles']);
+        Route::post('/committee/review/{article_id}', [CommitteeController::class, 'reviewArticle']);
+    });
+    
     
