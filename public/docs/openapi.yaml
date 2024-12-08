@@ -1,0 +1,1438 @@
+openapi: 3.0.3
+info:
+  title: 'Scientific journal api documentation'
+  description: ''
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost'
+paths:
+  /api/auth/register:
+    post:
+      summary: ''
+      operationId: postApiAuthRegister
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: xvdebd
+                  nullable: false
+                last_name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: epbzdrhcevjoozbiuobiyf
+                  nullable: false
+                organization:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: czcu
+                  nullable: false
+                phone:
+                  type: string
+                  description: 'Must not be greater than 15 characters.'
+                  example: ey
+                  nullable: true
+                nationality:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: pkbkdyujqmyncahfqbxagzt
+                  nullable: false
+                email:
+                  type: string
+                  description: 'Must be a valid email address. Must not be greater than 255 characters.'
+                  example: breitenberg.vicky@example.com
+                  nullable: false
+                username:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: jnwslktebyknbzzuycyzb
+                  nullable: false
+                password:
+                  type: string
+                  description: 'Must be at least 8 characters.'
+                  example: '<;wLFHaX&Wa^58`5'
+                  nullable: false
+              required:
+                - first_name
+                - last_name
+                - organization
+                - nationality
+                - email
+                - username
+                - password
+      security: []
+  /api/auth/login:
+    post:
+      summary: ''
+      operationId: postApiAuthLogin
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: ''
+                  example: maxime
+                  nullable: false
+                password:
+                  type: string
+                  description: ''
+                  example: 'f>bbRH{R-&?<QQ'
+                  nullable: false
+              required:
+                - login
+                - password
+      security: []
+  /api/auth/verify-email:
+    get:
+      summary: ''
+      operationId: getApiAuthVerifyEmail
+      description: ''
+      parameters: []
+      responses:
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 400
+                  message: 'Invalid verification link.'
+                properties:
+                  status:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'Invalid verification link.'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: ''
+                  example: non
+                  nullable: false
+              required:
+                - token
+      security: []
+  /api/auth/forget-password:
+    post:
+      summary: ''
+      operationId: postApiAuthForgetPassword
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Must be a valid email address. The <code>email</code> of an existing record in the users table. Must not be greater than 255 characters.'
+                  example: joy13@example.org
+                  nullable: false
+              required:
+                - email
+      security: []
+  /api/auth/reset-password:
+    get:
+      summary: ''
+      operationId: getApiAuthResetPassword
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 200
+                  token: null
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  token:
+                    type: string
+                    example: null
+      tags:
+        - Endpoints
+      security: []
+    post:
+      summary: ''
+      operationId: postApiAuthResetPassword
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: ''
+                  example: qui
+                  nullable: false
+                email:
+                  type: string
+                  description: 'Must be a valid email address. The <code>email</code> of an existing record in the users table.'
+                  example: alvah32@example.net
+                  nullable: false
+                password:
+                  type: string
+                  description: 'Must be at least 8 characters.'
+                  example: 's`c7pbP5*t'
+                  nullable: false
+              required:
+                - token
+                - email
+                - password
+      security: []
+  /api/auth/logout:
+    post:
+      summary: ''
+      operationId: postApiAuthLogout
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+  /api/user:
+    get:
+      summary: ''
+      operationId: getApiUser
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  /api/users/email:
+    post:
+      summary: ''
+      operationId: postApiUsersEmail
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Must be a valid email address.'
+                  example: owunsch@example.net
+                  nullable: false
+              required:
+                - email
+      security: []
+  '/api/tac-gia/{id_bai_viet}':
+    get:
+      summary: ''
+      operationId: getApiTacGiaId_bai_viet
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 404
+                  error: 'Không có tác giả nào cho bài viết này'
+                properties:
+                  status:
+                    type: integer
+                    example: 404
+                  error:
+                    type: string
+                    example: 'Không có tác giả nào cho bài viết này'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: ''
+        example: qui
+        required: true
+        schema:
+          type: string
+  /api/chuyen-de:
+    get:
+      summary: ''
+      operationId: getApiChuyenDe
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                example:
+                  -
+                    category_id: 1
+                    name: hedrf
+                    description: null
+                    created_at: null
+                    updated_at: null
+      tags:
+        - Endpoints
+      security: []
+  /api/send-message:
+    post:
+      summary: ''
+      operationId: postApiSendMessage
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                article_id:
+                  type: integer
+                  description: ''
+                  example: 19
+                  nullable: false
+                message:
+                  type: string
+                  description: ''
+                  example: velit
+                  nullable: false
+              required:
+                - article_id
+                - message
+      security: []
+  /api/messages:
+    get:
+      summary: ''
+      operationId: getApiMessages
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: integer
+                  description: ''
+                  example: 5
+                  nullable: false
+              required:
+                - room_id
+      security: []
+  '/api/message/{id}':
+    put:
+      summary: ''
+      operationId: putApiMessageId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: ''
+                  example: qui
+                  nullable: false
+              required:
+                - message
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiMessageId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the message.'
+        example: voluptatem
+        required: true
+        schema:
+          type: string
+  /api/user/article/files:
+    get:
+      summary: ''
+      operationId: getApiUserArticleFiles
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                article_id:
+                  type: integer
+                  description: ''
+                  example: 15
+                  nullable: false
+              required:
+                - article_id
+      security: []
+  /api/bai-viet:
+    get:
+      summary: ''
+      operationId: getApiBaiViet
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  /api/bai-viet1:
+    get:
+      summary: ''
+      operationId: getApiBaiViet1
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  /api/user/tokens:
+    get:
+      summary: ''
+      operationId: getApiUserTokens
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  /api/submissions:
+    get:
+      summary: ''
+      operationId: getApiSubmissions
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  '/api/tukhoa/{id_bai_viet}':
+    get:
+      summary: ''
+      operationId: getApiTukhoaId_bai_viet
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: ''
+        example: consectetur
+        required: true
+        schema:
+          type: string
+  '/api/articles/{article_id}/updated':
+    put:
+      summary: ''
+      operationId: putApiArticlesArticle_idUpdated
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+                  description: ''
+                  example: adipisci
+                  nullable: false
+                keyword:
+                  type: string
+                  description: ''
+                  example: sed
+                  nullable: true
+                citations:
+                  type: string
+                  description: ''
+                  example: dolor
+                  nullable: true
+              required:
+                - note
+      security: []
+    parameters:
+      -
+        in: path
+        name: article_id
+        description: 'The ID of the article.'
+        example: ipsa
+        required: true
+        schema:
+          type: string
+  '/api/articles/{article_id}/update':
+    put:
+      summary: ''
+      operationId: putApiArticlesArticle_idUpdate
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: article_id
+        description: 'The ID of the article.'
+        example: itaque
+        required: true
+        schema:
+          type: string
+  '/api/wizard/step1/{id_bai_viet}':
+    post:
+      summary: ''
+      operationId: postApiWizardStep1Id_bai_viet
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+                  description: ''
+                  example: exercitationem
+                  nullable: false
+                category_id:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: bavja
+                  nullable: false
+              required:
+                - note
+                - category_id
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: 'Optional parameter.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: maxime
+  '/api/wizard/step2/{id_bai_viet}':
+    post:
+      summary: ''
+      operationId: postApiWizardStep2Id_bai_viet
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: array
+                  description: 'Must be a file. Must not be greater than 2048 kilobytes.'
+                  items:
+                    type: string
+                    format: binary
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: 'Optional parameter.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: culpa
+  '/api/wizard/step3/{id_bai_viet}':
+    post:
+      summary: ''
+      operationId: postApiWizardStep3Id_bai_viet
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: wt
+                  nullable: false
+                abstract:
+                  type: string
+                  description: 'Must not be greater than 250 characters.'
+                  example: aidazjyovbyijpfzoksjwd
+                  nullable: true
+                keyword:
+                  type: string
+                  description: ''
+                  example: quia
+                  nullable: true
+                citations:
+                  type: string
+                  description: ''
+                  example: sint
+                  nullable: true
+                coAuthors:
+                  type: array
+                  description: 'Make citations nullable.'
+                  example: null
+                  items:
+                    type: object
+                    nullable: true
+                    properties:
+                      name:
+                        type: string
+                        description: ''
+                        example: voluptates
+                        nullable: false
+                      email:
+                        type: string
+                        description: 'Must be a valid email address.'
+                        example: hdenesik@example.net
+                        nullable: false
+                      role:
+                        type: string
+                        description: ''
+                        example: quia
+                        nullable: false
+                    required:
+                      - name
+                      - email
+                      - role
+              required:
+                - title
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: 'Optional parameter.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: saepe
+  '/api/wizard/updatestep3/{id_bai_viet}':
+    post:
+      summary: ''
+      operationId: postApiWizardUpdatestep3Id_bai_viet
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                coAuthors:
+                  type: array
+                  description: ''
+                  example: null
+                  items:
+                    type: object
+                    nullable: true
+                    properties:
+                      name:
+                        type: string
+                        description: ''
+                        example: magnam
+                        nullable: false
+                      email:
+                        type: string
+                        description: 'Must be a valid email address.'
+                        example: rhane@example.org
+                        nullable: false
+                      role:
+                        type: string
+                        description: ''
+                        example: ducimus
+                        nullable: false
+                    required:
+                      - name
+                      - email
+                      - role
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: 'Optional parameter.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: officia
+  '/api/wizard/step4/{id_bai_viet}':
+    post:
+      summary: ''
+      operationId: postApiWizardStep4Id_bai_viet
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id_bai_viet
+        description: 'Optional parameter.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: distinctio
+  /api/user/update1:
+    put:
+      summary: ''
+      operationId: putApiUserUpdate1
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: jzdn
+                  nullable: false
+                last_name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: xpluxtomdhsodidy
+                  nullable: false
+                title:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: olibobohageogyjrm
+                  nullable: true
+                gender:
+                  type: string
+                  description: 'Must not be greater than 10 characters.'
+                  example: gwhpduytwv
+                  nullable: true
+              required:
+                - first_name
+                - last_name
+      security: []
+  /api/user/update2:
+    put:
+      summary: ''
+      operationId: putApiUserUpdate2
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organization:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: ontpcryfxgzn
+                  nullable: false
+              required:
+                - organization
+      security: []
+  /api/user/update3:
+    put:
+      summary: ''
+      operationId: putApiUserUpdate3
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                research_field:
+                  type: string
+                  description: '''quyen'' => ''required|boolean'',. Must not be greater than 255 characters.'
+                  example: xveqnezie
+                  nullable: false
+              required:
+                - research_field
+      security: []
+  /api/user/update4:
+    post:
+      summary: ''
+      operationId: postApiUserUpdate4
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+  /api/user/update5:
+    put:
+      summary: ''
+      operationId: putApiUserUpdate5
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                  description: ''
+                  example: adipisci
+                  nullable: false
+                new_password:
+                  type: string
+                  description: 'Must be at least 6 characters.'
+                  example: cghmpigyrbgdsyanlzjvwrchmljkxlmcinvipdvlrfvnvjsgiyacxypdhuduhzsoyekquxymwjsbeojmyxlwnsyf
+                  nullable: false
+              required:
+                - current_password
+                - new_password
+      security: []
+  /api/auth/avatar:
+    get:
+      summary: ''
+      operationId: getApiAuthAvatar
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  '/api/avatar/{filename}':
+    get:
+      summary: ''
+      operationId: getApiAvatarFilename
+      description: ''
+      parameters: []
+      responses:
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Server Error'
+                properties:
+                  message:
+                    type: string
+                    example: 'Server Error'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: filename
+        description: ''
+        example: perferendis
+        required: true
+        schema:
+          type: string
+  '/api/public/{filename}':
+    get:
+      summary: ''
+      operationId: getApiPublicFilename
+      description: ''
+      parameters: []
+      responses:
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Server Error'
+                properties:
+                  message:
+                    type: string
+                    example: 'Server Error'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: filename
+        description: ''
+        example: velit
+        required: true
+        schema:
+          type: string
+  '/api/uploads/{filename}':
+    get:
+      summary: ''
+      operationId: getApiUploadsFilename
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: 'File not found'
+                properties:
+                  error:
+                    type: string
+                    example: 'File not found'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: filename
+        description: ''
+        example: dolores
+        required: true
+        schema:
+          type: string
+  /api/notifications:
+    get:
+      summary: ''
+      operationId: getApiNotifications
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  /api/notifications/mark-all-read:
+    post:
+      summary: ''
+      operationId: postApiNotificationsMarkAllRead
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+  '/api/notifications/{notificationId}/mark-read':
+    post:
+      summary: ''
+      operationId: postApiNotificationsNotificationIdMarkRead
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: notificationId
+        description: ''
+        example: aut
+        required: true
+        schema:
+          type: string
+  '/api/download-pdf/{article_id}':
+    get:
+      summary: ''
+      operationId: getApiDownloadPdfArticle_id
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: 'File not found'
+                properties:
+                  error:
+                    type: string
+                    example: 'File not found'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: article_id
+        description: 'The ID of the article.'
+        example: officiis
+        required: true
+        schema:
+          type: string
+  /api/editorial/articles:
+    get:
+      summary: ''
+      operationId: getApiEditorialArticles
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+  '/api/editorial/articles/{id}':
+    get:
+      summary: ''
+      operationId: getApiEditorialArticlesId
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the article.'
+        example: esse
+        required: true
+        schema:
+          type: string
+  '/api/editorial/articles/{id}/approve':
+    put:
+      summary: ''
+      operationId: putApiEditorialArticlesIdApprove
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the article.'
+        example: praesentium
+        required: true
+        schema:
+          type: string
+  '/api/editorial/articles/{id}/assign-editor':
+    put:
+      summary: ''
+      operationId: putApiEditorialArticlesIdAssignEditor
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                article_id:
+                  type: integer
+                  description: 'The <code>article_id</code> of an existing record in the articles table.'
+                  example: 13
+                  nullable: false
+                reviewers:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the users table.'
+                  example:
+                    - 9
+                  items:
+                    type: integer
+                notes:
+                  type: string
+                  description: ''
+                  example: praesentium
+                  nullable: true
+              required:
+                - article_id
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the article.'
+        example: saepe
+        required: true
+        schema:
+          type: string
+  /api/statistics:
+    get:
+      summary: ''
+      operationId: getApiStatistics
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: 401
+                  message: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: 'Bạn cần đăng nhập để truy cập tài nguyên này'
+      tags:
+        - Endpoints
+      security: []
+tags:
+  -
+    name: Endpoints
+    description: ''

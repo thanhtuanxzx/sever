@@ -33,6 +33,6 @@ class Message extends Model
         // Kiểm tra quyền chỉnh sửa: chỉ cho phép nếu người dùng là chủ sở hữu tin nhắn 
         // và thời gian tạo tin nhắn chưa quá 2 tiếng
         // return $this->user_id === auth()->id() && $messageCreatedAt->diffInHours($currentTime) < 2;// 2 tiếng 
-        return $this->user_id === auth()->id() && $messageCreatedAt->diffInSeconds($currentTime) < 10;//2 giây 
+        return $this->user_id === auth()->id() && $messageCreatedAt->diffInSeconds($currentTime) < 10;//10 giây 
     }
 }
