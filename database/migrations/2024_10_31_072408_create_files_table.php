@@ -20,7 +20,9 @@ return new class extends Migration
             $table->string('file_name')->nullable(); // 'file_name' column
             $table->string('file_path')->nullable(); // 'file_path' column
             $table->string('file_mime_type')->nullable(); // 'file_mime_type' column
+            $table->string('comment')->nullable();
             $table->timestamps(); // Timestamps for created_at and updated_at
+
 
             // Define the foreign key relationship
             $table->foreign('article_id')->references('article_id')->on('articles')->onDelete('cascade');

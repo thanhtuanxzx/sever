@@ -8,7 +8,8 @@ use App\Events\NewMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Article;
-
+use Illuminate\Support\Str;
+use App\Models\File;
 class ChatController extends Controller
 {
     public function sendMessage(Request $request)
@@ -166,6 +167,54 @@ public function getMessages(Request $request)
 
         return response()->json(['message' => 'Message deleted successfully']);
     }
-
+    public function getfile(Request $request)
+    {
+        // Xác thực dữ liệu đầu vào
+        $request->validate([
+            'file.*' => 'file|max:2048', // Cho phép nhiều file
+            'article_id' => 'required|exists:articles,article_id',
+            'comment'=>'string' 
+        ]);
+    
+        $articleId = $request->input('article_id'); // Lấy article_id từ yêu cầu
+    
+        // Kiểm tra xem có tệp tin nào được tải lên không
+        if ($request->hasFile('file')) {
+            $files = $request->file('file');
+    
+            // Nếu chỉ có một tệp, chuyển nó thành mảng để xử lý nhất quán
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+    
+            foreach ($files as $file) {
+                // Tạo tên tệp ngẫu nhiên
+                $generatedFileName = Str::random(20) . '.' . $file->getClientOriginalExtension();
+                // Lưu tệp vào thư mục 'uploads'
+                $filePath = $file->storeAs('uploads', $generatedFileName, 'public');
+    
+                // Lưu thông tin tệp vào cơ sở dữ liệu
+                File::create([
+                    'article_id' => $articleId,
+                    'generated_name' => $generatedFileName,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_mime_type' => $file->getMimeType(),
+                    'comment' => $request->input('comment'),
+                ]);
+            }
+    
+            return response()->json([
+                'status' => 200,
+                'message' => 'Các tệp đã được tải lên thành công và bài viết đã được cập nhật.'
+            ]);
+        } else {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Không có tệp nào được tải lên.'
+            ]);
+        }
+    }
+    
 
 }

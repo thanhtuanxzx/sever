@@ -18,7 +18,8 @@ class File extends Model
         'file_name',
         'file_path',
         'file_mime_type',
-        'generated_name'
+        'generated_name',
+        'comment'
     ];
 
     public function article()
