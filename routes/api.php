@@ -133,21 +133,14 @@ Route::middleware('auth:api')->group(function () {
 
 
     Route::middleware(['auth:api', 'role:1'])->group(function () {
-        // Danh sách bài báo
-        Route::get('editorial/articles', [EditorialController::class, 'index']);
-    
-        // Chi tiết bài báo
-        Route::get('editorial/articles/{id}', [EditorialController::class, 'show']);
-    
-        // Phê duyệt bài báo
-        Route::put('editorial/articles/{id}/approve', [EditorialController::class, 'approve']);
-    
-        // Phân công biên tập viên
-        Route::put('editorial/articles/{id}/assign-editor', [EditorialController::class, 'assignReviewers']);
-    
-        // Thống kê
-        Route::get('statistics', [EditorialController::class, 'statistics']);
-    });
+        Route::get('/pending-articles', [EditorialController::class, 'getPendingArticles']);
+
+        // Route để lấy danh sách người dùng có vai trò reviewer (role = 3)
+        Route::get('/reviewers', [EditorialController::class, 'getReviewer']);
+        Route::post('/editorial/assign-reviewer', [EditorialController::class, 'assignReviewer']);
+
+        });
+
     Route::middleware(['auth:api', 'role:2'])->group(function () {
         Route::get('/committee/review-articles', [CommitteeController::class, 'getPendingArticles']);
         Route::post('/committee/review/{article_id}', [CommitteeController::class, 'reviewArticle']);

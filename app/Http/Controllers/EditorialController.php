@@ -6,96 +6,94 @@ use Illuminate\Http\Request;
 use App\Models\Article; 
 use App\Models\Editor;  
 use App\Models\Review;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AuthorNotifiedMail;
+use App\Mail\ReviewerAssignedMail;
+
 class EditorialController extends Controller
 {
-    // Danh sách bài báo
-    public function index()
+    public function getPendingArticles()
     {
-        $articles = Article::orderBy('created_at', 'desc')->paginate(10);
-        return response()->json($articles);
+        // Lấy các bài viết có trạng thái đang chờ xử lý bởi Ban Trị Sự
+        $articles = Article::where('status', 'Pending_editor')->get();
+
+        return response()->json([
+            'status' => 200,
+            'data' => $articles,
+        ]);
+    }
+    public function getReviewer()
+    {
+        $users = User::where('role', '3')->get(); // Lấy danh sách người dùng với role = 3
+
+        if ($users->isEmpty()) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'No users found',
+            ]);
+        }
+
+        // Tạo danh sách reviewers
+        $reviewers = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+            ];
+        });
+
+        return response()->json([
+            'status' => 200,
+            'data' => $reviewers,
+        ]);
     }
 
-    // Chi tiết bài báo
-    public function show($id)
+    public function assignReviewer(Request $request)
     {
-        $article = Article::findOrFail($id);
-        return response()->json($article);
-    }
-
-    // Phê duyệt bài báo
-    public function approve(Request $request, $id)
-    {
-        $article = Article::findOrFail($id);
-
-        $article->status = $request->input('status'); // 'approved' hoặc 'rejected'
-        // $article->reviewer_comment = $request->input('reviewer_comment'); // Lời nhắn
-        $article->save();
-
-        return response()->json(['message' => 'Cập nhật trạng thái bài báo thành công!']);
-    }
-
-    // Phân công phản biện 
-    public function assignReviewers(Request $request)
-    {
-        $request->validate([
-            'article_id' => 'required|integer|exists:articles,article_id',
-            'reviewers' => 'required|array',
-'reviewers.*' => 'integer|exists:users,id',
-
-
-            'notes' => 'nullable|string',
+        // Xác thực dữ liệu đầu vào
+        $validated = $request->validate([
+            'article_id' => 'required|exists:articles,article_id',
+            'reviewer_id' => 'required|exists:users,id',
+            'submission_date'=>'required|date',
+            'evaluation'=>'string'
         ]);
 
-        $articleId = $request->input('article_id');
-        $reviewerIds = $request->input('reviewers');
-        $notes = $request->input('notes');
+        // Kiểm tra xem bài viết đã được phân công cho người phản biện này chưa
+        $existingReview = Review::where('article_id', $validated['article_id'])
+            ->where('reviewer_id', $validated['reviewer_id'])
+            ->first();
 
-        try {
-            $article = Article::where('article_id', $articleId)->first(); // Đảm bảo sử dụng đúng khóa chính
-                if (!$article) {
-                    return response()->json([
-                        'status' => 404,
-                        'error' => 'Không tìm thấy bài viết.',
-                    ], 404);
-                }
-
-         
-            foreach ($reviewerIds as $reviewerId) {
-                Review::create([
-                    'article_id' => $articleId,
-                    'reviewer_id' => $reviewerId,
-                    'status' => 'pending', // Mặc định trạng thái là chờ phản biện
-                    'notes' => $notes,
-                ]);
-            }
-
-            // Cập nhật trạng thái bài viết (tuỳ chỉnh nếu cần)
-            $article->update(['status' => 'assigned']);
-
+        if ($existingReview) {
             return response()->json([
-                'status' => 200,
-                'message' => 'Phân công phản biện thành công!',
+                'status' => 409,
+                'message' => 'Reviewer is already assigned to this article.',
             ]);
-        } catch (\Exception $e) {
-            Log::error('Lỗi phân công phản biện: ' . $e->getMessage());
-
-            return response()->json([
-                'status' => 500,
-                'error' => 'Đã xảy ra lỗi trong quá trình phân công.',
-            ], 500);
         }
+
+        // Tạo bản ghi phân công phản biện
+        $review = Review::create([
+            'article_id' => $validated['article_id'],
+            'reviewer_id' => $validated['reviewer_id'],
+            'evaluation'=>$validated['evaluation']??null,
+            'submission_date' => $validated['submission_date'],
+            'acceptance_date'=> now(),
+        ]);
+        
+        // Gửi email cho người phản biện
+        $reviewer = User::find($validated['reviewer_id']);
+        Mail::to($reviewer->email)->send(new ReviewerAssignedMail($review));
+
+        // Gửi email cho tác giả
+        $article = Article::find($validated['article_id']);   
+        Mail::to($article->user->email)->send(new AuthorNotifiedMail($article));
+            
+        
+        return response()->json([
+            'status' => 200,
+            'message' => 'Reviewer assigned successfully.',
+            'data' => $review,
+        ]);
     }
 
-    // Thống kê
-    public function statistics()
-    {
-        $stats = [
-            'total' => Article::count(),
-            'approved' => Article::where('status', 'approved')->count(),
-            'pending' => Article::where('status', 'pending')->count(),
-            'rejected' => Article::where('status', 'rejected')->count(),
-        ];
-
-        return response()->json($stats);
-    }
 }
