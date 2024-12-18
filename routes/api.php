@@ -9,6 +9,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\EditorialController;
 use App\Http\Controllers\CommitteeController;
+use App\Http\Controllers\ReviewerController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -147,5 +148,11 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/committee/review-articles', [CommitteeController::class, 'getPendingArticles']);
         Route::post('/committee/review/{article_id}', [CommitteeController::class, 'reviewArticle']);
     });
+    
+    Route::middleware(['auth:api', 'role:3'])->group(function () {
+        Route::get('/getfull-article', [ReviewerController::class, 'getByStatus']);
+       
+    });
+    
     
     
