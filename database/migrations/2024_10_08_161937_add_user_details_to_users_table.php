@@ -17,7 +17,7 @@ return new class extends Migration
             // Add new columns to the users table
             $table->string('title')->nullable()->after('token');        // Title
             $table->string('gender')->nullable()->after('title');     // Gender
-            $table->string('role')->nullable()->after('gender');        // Role
+            $table->string('role')->default('4')->nullable()->after('gender');        // Role
             $table->text('bio')->nullable()->after('role');            // Biography
             $table->string('website_url')->nullable()->after('bio');        // Website URL
             $table->string('avatar')->nullable()->after('website_url');        // Avatar (URL or file name)

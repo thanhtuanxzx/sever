@@ -133,7 +133,7 @@ Route::middleware('auth:api')->group(function () {
         // Nếu không tìm thấy file, trả về lỗi
         return response()->json(['error' => 'File not found'], 404);
     });
-
+    Route::get('file/{article_id}/{action?}', [EditorialController::class, 'showOrDownloadFile']);
 
     Route::middleware(['auth:api', 'role:1'])->group(function () {
         Route::get('/pending-articles', [EditorialController::class, 'getPendingArticles']);
@@ -141,6 +141,7 @@ Route::middleware('auth:api')->group(function () {
         // Route để lấy danh sách người dùng có vai trò reviewer (role = 3)
         Route::get('/reviewers', [EditorialController::class, 'getReviewer']);
         Route::post('/editorial/assign-reviewer', [EditorialController::class, 'assignReviewer']);
+        Route::get('/getfull-article', [EditorialController::class, 'getByStatus']);
 
         });
 
@@ -149,10 +150,11 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/committee/review/{article_id}', [CommitteeController::class, 'reviewArticle']);
     });
     
-    Route::middleware(['auth:api', 'role:3'])->group(function () {
-        Route::get('/getfull-article', [ReviewerController::class, 'getByStatus']);
+    // Route::middleware(['auth:api', 'role:3'])->group(function () {
+    //     Route::get('/getfull-article', [ReviewerController::class, 'getByStatus']);
        
-    });
-    
+    // });
+    Route::get('/user/{id}/capnhatquyen', [EditorialController::class, 'capnhatQuyen']);
+
     
     
