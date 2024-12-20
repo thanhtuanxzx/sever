@@ -61,9 +61,6 @@ class UserController extends Controller
 
         return response()->json(['status' => 200,'message' => 'Cập nhật lĩnh vực nghiên cứu thành công!'], 200);
     }
-
-
-
     public function update4(Request $request)
     {
         
@@ -128,6 +125,10 @@ class UserController extends Controller
             ], 422); // Trả về mã trạng thái 422 Unprocessable Entity
         }
     }
+    
+
+
+    
 
     public function getAvatar(Request $request)
     {

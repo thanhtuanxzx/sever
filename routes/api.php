@@ -81,7 +81,7 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/user/update1', [UserController::class, 'update1']);
     Route::put('/user/update2', [UserController::class, 'update2']);
     Route::put('/user/update3', [UserController::class, 'update3']);
-    Route::put('/user/update4', [UserController::class, 'update4']);
+    Route::post('/user/update4', [UserController::class, 'update4']);
     Route::put('/user/update5', [UserController::class, 'update5']);
 
     Route::post('/uploadfile',[ChatController::class,'getfile']);

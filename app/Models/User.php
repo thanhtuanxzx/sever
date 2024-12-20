@@ -36,7 +36,9 @@ class User extends Authenticatable implements JWTSubject
         'role',
         'bio',
         'profile_image',
-        'homepage_url'
+        'homepage_url',
+        'research_field'
+
     ];
 
     public function articles()
